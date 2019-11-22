@@ -1,0 +1,99 @@
+#!/bin/bash
+
+helpCluster() {
+  echo "Use the cluster command to start, stop, and view the status of Akka cluster nodes."
+  echo
+  echo "./akka cluster [start N | stop | status]"
+  echo "./akka cluster start N  # Starts one or more cluster nodes as specified by N, which must be 1-9."
+  echo "./akka cluster stop     # Stops all currently cluster nodes."
+  echo "./akka cluster status   # Shows an Akka Management view of the cluster status/state."
+}
+
+helpNode() {
+  echo "Use the node command to start, stop, and tail the log of a specific cluster node."
+  echo "Nodes are started on port 255N and management port 855N, N is the node number 1-9."
+  echo
+  echo "./akka node [Start N | stop N | tail N]"
+  echo "./akka node start N  # Start the specified cluster node for nodes 1-9."
+  echo "./akka node stop N   # Stop the specified cluster node for nodes 1-9."
+  echo "./akka node tail N   # Tail the log file of the specified cluster node for nodes 1-9."
+}
+
+helpAll() {
+  echo "This CLI is used to start, stop and monitor nodes in an Akka cluster."
+  echo
+  echo "These commands manage the Akka cluster as defined in this project. A cluster"
+  echo "of nodes is started using the JAR file build from this project's Maven POM file."
+  echo
+  helpCluster
+  echo
+  helpNode
+}
+
+clusterCommand() {
+  command=$1
+  argument=$2
+
+  case $command in
+    "start")
+      $scriptPath/cluster-start $argument
+      ;;
+    "stop")
+      $scriptPath/cluster-stop
+      ;;
+    "status")
+      $scriptPath/cluster-status
+      ;;
+    *)
+      helpCluster
+      ;;
+  esac
+}
+
+nodeCommand() {
+  command=$1
+  argument=$2
+
+  case $command in
+    "start")
+      $scriptPath/node-start $argument
+      ;;
+    "stop")
+      $scriptPath/node-stop $argument
+      ;;
+    "tail")
+      $scriptPath/node-tail $argument
+      ;;
+    *)
+      helpNode
+      ;;
+  esac
+}
+
+command() {
+  command=$1
+  subCommand=$2
+  argument=$3
+
+  case $command in
+    "cluster")
+      clusterCommand $subCommand $argument
+      ;;
+    "node")
+      nodeCommand $subCommand $argument
+      ;;
+    *)
+      echo "Invalid command '$command'"
+      echo
+      helpAll
+      ;;
+  esac
+}
+
+scriptPath=$(dirname $0)
+
+if [ $# -eq 0 ] ; then
+  helpAll
+else
+  command $1 $2 $3
+fi

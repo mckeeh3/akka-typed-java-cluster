@@ -1,0 +1,18 @@
+#!/bin/bash
+
+nodeStatus() {
+  node=$1
+  port="855"$node
+
+  httpStatus=$(curl --write-out %{http_code} --silent --output /dev/null http://localhost:$port/cluster/members)
+
+  if [[ $httpStatus == 200 ]] ; then
+    curl --silent http://localhost:$port/cluster/members | python -m json.tool
+    exit 0
+  fi
+}
+
+for i in $(seq 9) ; do nodeStatus $i ; done
+
+echo "Unable to get a response from any cluster nodes."
+exit 1

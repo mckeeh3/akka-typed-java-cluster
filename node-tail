@@ -1,0 +1,28 @@
+#!/bin/bash
+
+# Use this script to tail a specific cluster node log file.
+
+usage() {
+  echo "Usage: $0 node - Tail cluster node number 1 through 9." ; exit 1
+}
+
+[ $# -eq 0 ] && usage
+
+node=$1
+scriptPath=$(dirname $0)
+scriptPathFull=$(cd $(dirname $0) ; pwd -P)
+scriptFilename=$(basename $scriptPathFull)
+jarFilename=$(find $scriptPath/target -name *allinone.jar)
+
+tailNode() {
+  node=$1
+  port="255"$node
+  tail -f /tmp/$scriptFilename-$node.log
+}
+
+if [[ $node =~ ^[1-9]$ ]] ; then
+  tailNode $node
+else
+  echo "Cluster node number $node is invalid. The node number must be 1 through 9."
+  usage
+fi

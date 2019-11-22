@@ -1,0 +1,34 @@
+#!/bin/bash
+
+# Use this script to run 1 to 9 Akka cluster nodes. The command line parameter must be from 1 to 9. Each of the
+# node's JVMs is started as a background process. Each process logs both stdin and stderr to a file located in
+# the /tmp directory. The log file name is derived from the current directory name with a suffix of "-N.log",
+# N is the node number. The Akka port number is set to 255N, N is the node number.
+
+usage() {
+  echo "Usage: $0 nodes - Number of cluster nodes, number must be 1 through 9." ; exit 1
+}
+
+startNode() {
+  node=$1
+  $scriptPath/node-start $node
+}
+
+startNodes() {
+  for i in $(seq $1) ; do startNode $i ; done
+}
+
+[ $# -eq 0 ] && usage
+
+nodes=$1
+
+if [[ $nodes =~ ^[1-9]$ ]] ; then
+  echo -n "Starting $nodes cluster node" ; if [[ $nodes -gt 1 ]] ; then echo "s" ; else echo "" ; fi
+else
+  echo "Number of cluster nodes $nodes is invalid. The number of nodes must be 1 through 9."
+  usage
+fi
+
+scriptPath=$(dirname $0)
+
+startNodes $nodes
