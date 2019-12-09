@@ -1,6 +1,5 @@
 package cluster;
 
-import akka.actor.Cancellable;
 import akka.actor.typed.Behavior;
 import akka.actor.typed.javadsl.*;
 import akka.cluster.ClusterEvent;
@@ -30,17 +29,8 @@ class ClusterListenerActor extends AbstractBehavior<ClusterEvent.ClusterDomainEv
     @Override
     public Receive<ClusterEvent.ClusterDomainEvent> createReceive() {
         return newReceiveBuilder()
-                .onMessage(ShowClusterState.class, this::showClusterState)
                 .onAnyMessage(this::logClusterEvent)
                 .build();
-    }
-
-    private Behavior<ClusterEvent.ClusterDomainEvent> showClusterState(ShowClusterState showClusterState) {
-        log.info("{} sent to {}", showClusterState, cluster.selfMember());
-        logClusterMembers(cluster.state());
-
-        Behaviors.same();
-        return Behaviors.same();
     }
 
     private Behavior<ClusterEvent.ClusterDomainEvent> logClusterEvent(Object clusterEventMessage) {
@@ -50,11 +40,8 @@ class ClusterListenerActor extends AbstractBehavior<ClusterEvent.ClusterDomainEv
         return Behaviors.same();
     }
 
-    private void logClusterMembers() {
+    private static void logClusterMembers() {
         logClusterMembers(cluster.state());
-
-        if (showClusterStateCancelable == null) {
-        }
     }
 
     private void logClusterMembers(ClusterEvent.CurrentClusterState currentClusterState) {
@@ -81,17 +68,5 @@ class ClusterListenerActor extends AbstractBehavior<ClusterEvent.ClusterDomainEv
                     }
                 });
 
-    }
-
-    private void showClusterStateX(ShowClusterState showClusterState) {
-        log.info("{} sent to {}", showClusterState, cluster.selfMember());
-        showClusterStateCancelable = null;
-    }
-
-    private static class ShowClusterState implements ClusterEvent.ClusterDomainEvent {
-        @Override
-        public String toString() {
-            return ShowClusterState.class.getSimpleName();
-        }
     }
 }
