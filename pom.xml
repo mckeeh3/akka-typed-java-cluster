@@ -11,7 +11,7 @@
     <properties>
         <java.version>8</java.version>
         <scala.version>2.13</scala.version>
-        <akka.version>2.6.0</akka.version>
+        <akka.version>2.6.1</akka.version>
         <akka.management.version>1.0.5</akka.management.version>
         <fst.version>2.56</fst.version>
         <junit.version>5.5.2</junit.version>
@@ -21,12 +21,12 @@
         <dependency>
             <groupId>com.typesafe.akka</groupId>
             <artifactId>akka-actor-typed_2.13</artifactId>
-            <version>2.6.0</version>
+            <version>${akka.version}</version>
         </dependency>
         <dependency>
             <groupId>com.typesafe.akka</groupId>
             <artifactId>akka-cluster-typed_2.13</artifactId>
-            <version>2.6.0</version>
+            <version>${akka.version}</version>
         </dependency>
 
         <!-- Logging -->
