@@ -40,7 +40,7 @@ class ClusterListenerActor extends AbstractBehavior<ClusterEvent.ClusterDomainEv
         return Behaviors.same();
     }
 
-    private static void logClusterMembers() {
+    private void logClusterMembers() {
         logClusterMembers(cluster.state());
     }
 
