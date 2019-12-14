@@ -14,7 +14,7 @@
         <akka.version>2.6.1</akka.version>
         <akka.http.version>10.1.11</akka.http.version>
         <akka.management.version>1.0.5</akka.management.version>
-        <jackson.version>2.9.9</jackson.version>
+        <jackson.version>2.10.1</jackson.version>
         <fst.version>2.56</fst.version>
         <junit.version>5.5.2</junit.version>
     </properties>
