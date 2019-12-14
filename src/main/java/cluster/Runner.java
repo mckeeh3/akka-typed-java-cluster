@@ -21,7 +21,8 @@ public class Runner {
         System.out.printf("Start cluster on port(s) %s%n", ports);
 
         ports.forEach(port -> {
-            ActorSystem.create(Main.create(), "cluster", setupClusterNodeConfig(port));
+            ActorSystem<Void> actorSystem = ActorSystem.create(Main.create(), "cluster", setupClusterNodeConfig(port));
+            HttpServer.start(actorSystem);
         });
     }
 
