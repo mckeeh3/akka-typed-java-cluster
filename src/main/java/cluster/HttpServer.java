@@ -19,10 +19,7 @@ import scala.Option;
 import java.io.*;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -116,12 +113,14 @@ class HttpServer {
             String jsonContents = loadNodes(actorSystem).toJson();
             return HttpResponse.create()
                     .withEntity(ContentTypes.create(MediaTypes.APPLICATION_JAVASCRIPT, HttpCharsets.UTF_8), jsonContents)
+                    .withHeaders(Collections.singletonList(HttpHeader.parse("Access-Control-Allow-Origin", "*")))
                     .withStatus(StatusCodes.ACCEPTED);
         } catch (Exception e) {
             log().error("I/O error on JSON response");
             return HttpResponse.create().withStatus(StatusCodes.INTERNAL_SERVER_ERROR);
         }
     }
+
     private String readFile(String filename) throws IOException {
         InputStream inputStream = getClass().getClassLoader().getResourceAsStream(filename);
         if (inputStream == null) {
@@ -139,9 +138,8 @@ class HttpServer {
         }
     }
 
-    static Nodes loadNodes(ActorSystem actorSystem) {
+    private static Nodes loadNodes(ActorSystem actorSystem) {
         final Cluster cluster = Cluster.get(actorSystem);
-        final Nodes nodes = new Nodes();
 
         ClusterEvent.CurrentClusterState clusterState = cluster.state();
 
@@ -150,13 +148,18 @@ class HttpServer {
 
         Member oldest = old.orElse(cluster.selfMember());
 
+        final Nodes nodes = new Nodes(
+                memberPort(cluster.selfMember()),
+                cluster.selfMember().address().equals(clusterState.getLeader()),
+                oldest.equals(cluster.selfMember()));
+
         StreamSupport.stream(clusterState.getMembers().spliterator(), false)
                 .forEach(new Consumer<Member>() {
                     int m = 0;
 
                     @Override
                     public void accept(Member member) {
-                        actorSystem.log().info("{} {}{}{}", ++m, leader(member), oldest(member), member);
+                        actorSystem.log().info("{} {} leader {}, oldest {}, {}", ++m, nodes.selfPort, leader(member), oldest(member), member);
                         nodes.add(member, leader(member), oldest(member));
                     }
 
@@ -181,22 +184,48 @@ class HttpServer {
         return actorSystem.log();
     }
 
+    private static boolean isValidPort(int port) {
+        return port >= 2551 && port <= 2559;
+    }
+
+    private static int memberPort(Member member) {
+        Option<Object> portOption = member.address().port();
+        if (portOption.isDefined()) {
+            return Integer.parseInt(portOption.get().toString());
+        }
+        return 0;
+    }
+
     public static class Nodes implements Serializable {
+        public final int selfPort;
+        public final boolean leader;
+        public final boolean oldest;
         public List<Node> nodes = new ArrayList<>();
 
+        public Nodes(int selfPort, boolean leader, boolean oldest) {
+            this.selfPort = selfPort;
+            this.leader = leader;
+            this.oldest = oldest;
+        }
+
         void add(Member member, boolean leader, boolean oldest) {
-            nodes.add(new Node(member.address().hostPort(), state(member.status()), leader, oldest, false));
+            final int port = memberPort(member);
+            if (isValidPort(port)) {
+                nodes.add(new Node(port, state(member.status()), leader, oldest, false));
+            }
         }
 
         void addUnreachable(Member member) {
-            Node node = new Node(member.address().hostPort(), "unreachable", false, false, false);
-            if (nodes.contains(node)) {
+            final int port = memberPort(member);
+            if (isValidPort(port)) {
+                Node node = new Node(port, "unreachable", false, false, false);
+                if (nodes.contains(node)) {
 
+                }
             }
         }
 
         private static String state(MemberStatus memberStatus) {
-            MemberStatus down = MemberStatus.down();
             if (memberStatus.equals(MemberStatus.down())) {
                 return "offline";
             } else if (memberStatus.equals(MemberStatus.joining())) {
@@ -227,14 +256,14 @@ class HttpServer {
     }
 
     public static class Node implements Serializable {
-        public final String address;
+        public final int port;
         public final String state;
         public final boolean leader;
         public final boolean oldest;
         public final boolean unreachable;
 
-        public Node(String address, String state, boolean leader, boolean oldest, boolean unreachable) {
-            this.address = address;
+        public Node(int port, String state, boolean leader, boolean oldest, boolean unreachable) {
+            this.port = port;
             this.state = state;
             this.leader = leader;
             this.oldest = oldest;
@@ -246,12 +275,12 @@ class HttpServer {
             if (this == o) return true;
             if (o == null || getClass() != o.getClass()) return false;
             Node node = (Node) o;
-            return Objects.equals(address, node.address);
+            return Objects.equals(port, node.port);
         }
 
         @Override
         public int hashCode() {
-            return Objects.hash(address);
+            return Objects.hash(port);
         }
     }
 }

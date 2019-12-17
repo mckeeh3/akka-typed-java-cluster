@@ -4,10 +4,12 @@ function setup() {
     frameRate(1);
 
     grid.resize();
+
+    requestClusterState();
 }
 
 function draw() {
-    const states = clusterStatus().states;
+    const states = clusterStateTemp().states;
 
     grid.draw(color(43, 52, 58));
 
@@ -20,7 +22,7 @@ function draw() {
             .setKeyColor(color(29, 249, 246))
             .setValueColor(color(255))
             .draw();
-    nineNodes(0, 24, 18, 4, states);
+    nineNodes(0, 24, 18, 4, nodeStates(clusterState.summary.nodes)); //states);
 
     strokeWeight(2.5);
     stroke(150, 150);
@@ -46,17 +48,17 @@ function draw() {
     frame(2 * 19, 2 * 14 + 1, 18, 13);
     frame(3 * 19, 2 * 14 + 1, 18, 13);
 
-    nineNodes(1 * 19 + 9, 5, 9, 2, states);
-    nineNodes(2 * 19 + 9, 5, 9, 2, states);
-    nineNodes(3 * 19 + 9, 5, 9, 2, states);
+    nineNodes(1 * 19 + 9, 5, 9, 2, nodeStates(clusterState.members[0].nodes)); //states);
+    nineNodes(2 * 19 + 9, 5, 9, 2, nodeStates(clusterState.members[1].nodes));
+    nineNodes(3 * 19 + 9, 5, 9, 2, nodeStates(clusterState.members[2].nodes));
 
-    nineNodes(1 * 19 + 9, 19, 9, 2, states);
-    nineNodes(2 * 19 + 9, 19, 9, 2, states);
-    nineNodes(3 * 19 + 9, 19, 9, 2, states);
+    nineNodes(1 * 19 + 9, 19, 9, 2, nodeStates(clusterState.members[3].nodes));
+    nineNodes(2 * 19 + 9, 19, 9, 2, nodeStates(clusterState.members[4].nodes));
+    nineNodes(3 * 19 + 9, 19, 9, 2, nodeStates(clusterState.members[5].nodes));
 
-    nineNodes(1 * 19 + 9, 33, 9, 2, states);
-    nineNodes(2 * 19 + 9, 33, 9, 2, states);
-    nineNodes(3 * 19 + 9, 33, 9, 2, states);
+    nineNodes(1 * 19 + 9, 33, 9, 2, nodeStates(clusterState.members[6].nodes));
+    nineNodes(2 * 19 + 9, 33, 9, 2, nodeStates(clusterState.members[7].nodes));
+    nineNodes(3 * 19 + 9, 33, 9, 2, nodeStates(clusterState.members[8].nodes));
 }
 
 function windowResized() {
@@ -161,7 +163,7 @@ function nodeColor(state) {
     return color(nodeColors[state]);
 }
 
-function clusterStatus() {
+function clusterStateTemp() {
     const states = ['starting', 'up', 'stopping', 'offline', 'unreachable'];
     function state() {
         return states[Math.floor(Math.random() * states.length)];
@@ -238,3 +240,130 @@ let = Label = function () {
         }
     };
 };
+
+function timeNow() {
+    return (new Date()).toISOString().substr(11, 12);
+}
+
+const clusterNodeRequestInterval = 15000;
+function requestClusterState() {
+    setInterval(requestClusterStateInterval, clusterNodeRequestInterval);
+}
+
+function requestClusterStateInterval() {
+    console.log(timeNow(), "interval");
+
+    clusterStateScanAllForDeadNodes();
+
+    for (var port = 8551; port <= 8559; port++) {
+        requestClusterStateFromNode(port);
+    }
+}
+
+function requestClusterStateFromNode(port) {
+    const url = "http://localhost:" + port + "/cluster-state";
+
+    loadJSON(url, clusterStateUpdateNode, requestClusterStateFromNodeError);
+}
+
+const clusterState = clusterStateInit();
+
+function clusterStateNodeReset(nodes) {
+    const time = (new Date()).getTime();
+
+    for (var n = 0; n < 9; n++) {
+        nodes[n] = { node: n + 2551, state: "offline", leader: false, oldest: false, unreachable: false, time: time };
+    }
+}
+
+function clusterStateScanForDeadNodes(nodes) {
+    const time = (new Date()).getTime();
+
+    for (var n = 0; n < 9; n++) {
+        if (time - nodes[n].time > 3000) { // node is dead if no update for over 3 seconds
+            nodes[n] = clusterStateNodeInit(n + 2551);
+        }
+    }
+}
+
+function clusterStateScanAllForDeadNodes() {
+    clusterStateScanForDeadNodes(clusterState.summary.nodes);
+    for (var m = 0; m < 9; m++) {
+        clusterStateScanForDeadNodes(clusterState.members[m].nodes);
+    }
+}
+
+function clusterStateInit() {
+    const time = (new Date()).getTime();
+    const clusterState = {};
+    clusterState.summary = {};
+    clusterState.summary.leader = 0;
+    clusterState.summary.oldest = 0;
+    clusterState.summary.nodes = [];
+
+    for (var node = 0; node < 9; node++) {
+        clusterState.summary.nodes[node] = clusterStateNodeInit(node + 2551);
+    }
+
+    clusterState.members = [];
+
+    for (var member = 0; member < 9; member++) {
+        clusterState.members[member] = { nodes: [] };
+
+        for (var node = 0; node < 9; node++) {
+            clusterState.members[member].nodes[node] = clusterStateNodeInit(node + 2551);
+        }
+    }
+    return clusterState;
+}
+
+function clusterStateNodeInit(port) {
+    return { node: port, state: "offline", leader: false, oldest: false, unreachable: false, time: (new Date()).getTime() };
+}
+
+function clusterStateUpdateNode(clusterStateFromNode) {
+    const selfPort = clusterStateFromNode.selfPort;
+
+    clusterStateNodeReset(clusterState.members[selfPort - 2551].nodes);
+
+    for (var n = 0; n < clusterStateFromNode.nodes.length; n++) {
+        const port = clusterStateFromNode.nodes[n].port;
+        const node = clusterStateFromNode.nodes[n];
+        node.time = (new Date()).getTime();
+        clusterState.members[selfPort - 2551].nodes[port - 2551] = node;
+    }
+
+    clusterStateUpdateSummary(clusterStateFromNode);
+}
+
+function clusterStateUpdateSummary(clusterStateFromNode) {
+    if (clusterStateFromNode.leader) {
+        clusterState.summary.leader = clusterStateFromNode.selfPort;
+
+        for (var n = 0; n < clusterStateFromNode.nodes.length; n++) {
+            const port = clusterStateFromNode.nodes[n].port;
+            const node = clusterStateFromNode.nodes[n];
+            node.time = (new Date()).getTime();
+            clusterState.summary.nodes[port - 2551] = node;
+        }
+    }
+
+    if (clusterStateFromNode.oldest) { // TODO fix this - oldest should be derived from the leader cluster state
+        clusterState.summary.oldest = clusterStateFromNode.selfPort;
+    }
+
+    summaryStates = nodeStates(clusterState.summary.nodes);
+    memberStates = nodeStates(clusterState.members[0].nodes);
+}
+
+function requestClusterStateFromNodeError(response) {
+    console.log(timeNow(), response);
+}
+
+function nodeStates(nodes) {
+    states = [];
+    for (var n = 0; n < 9; n++) {
+        states[n] = nodes[n].state;
+    }
+    return states;
+}
