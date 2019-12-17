@@ -56,7 +56,7 @@ class ClusterListenerActor extends AbstractBehavior<ClusterEvent.ClusterDomainEv
 
                     @Override
                     public void accept(Member member) {
-                        log.info("{} {}{}{}", ++m, leader(member), oldest(member), member);
+                        log.info("clusterListener {} {}{}{}", ++m, leader(member), oldest(member), member);
                     }
 
                     private String leader(Member member) {

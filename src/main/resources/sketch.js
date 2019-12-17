@@ -22,7 +22,9 @@ function draw() {
             .setKeyColor(color(29, 249, 246))
             .setValueColor(color(255))
             .draw();
-    nineNodes(0, 24, 18, 4, nodeStates(clusterState.summary.nodes)); //states);
+    nineNodes(0, 24, 18, 3, clusterState.summary.nodes);
+    // clusterState.summary.leader
+    // clusterState.summary.oldest
 
     strokeWeight(2.5);
     stroke(150, 150);
@@ -48,17 +50,17 @@ function draw() {
     frame(2 * 19, 2 * 14 + 1, 18, 13);
     frame(3 * 19, 2 * 14 + 1, 18, 13);
 
-    nineNodes(1 * 19 + 9, 5, 9, 2, nodeStates(clusterState.members[0].nodes)); //states);
-    nineNodes(2 * 19 + 9, 5, 9, 2, nodeStates(clusterState.members[1].nodes));
-    nineNodes(3 * 19 + 9, 5, 9, 2, nodeStates(clusterState.members[2].nodes));
+    nineNodes(1 * 19 + 9, 5, 9, 2, clusterState.members[0].nodes);
+    nineNodes(2 * 19 + 9, 5, 9, 2, clusterState.members[1].nodes);
+    nineNodes(3 * 19 + 9, 5, 9, 2, clusterState.members[2].nodes);
 
-    nineNodes(1 * 19 + 9, 19, 9, 2, nodeStates(clusterState.members[3].nodes));
-    nineNodes(2 * 19 + 9, 19, 9, 2, nodeStates(clusterState.members[4].nodes));
-    nineNodes(3 * 19 + 9, 19, 9, 2, nodeStates(clusterState.members[5].nodes));
+    nineNodes(1 * 19 + 9, 19, 9, 2, clusterState.members[3].nodes);
+    nineNodes(2 * 19 + 9, 19, 9, 2, clusterState.members[4].nodes);
+    nineNodes(3 * 19 + 9, 19, 9, 2, clusterState.members[5].nodes);
 
-    nineNodes(1 * 19 + 9, 33, 9, 2, nodeStates(clusterState.members[6].nodes));
-    nineNodes(2 * 19 + 9, 33, 9, 2, nodeStates(clusterState.members[7].nodes));
-    nineNodes(3 * 19 + 9, 33, 9, 2, nodeStates(clusterState.members[8].nodes));
+    nineNodes(1 * 19 + 9, 33, 9, 2, clusterState.members[6].nodes);
+    nineNodes(2 * 19 + 9, 33, 9, 2, clusterState.members[7].nodes);
+    nineNodes(3 * 19 + 9, 33, 9, 2, clusterState.members[8].nodes);
 }
 
 function windowResized() {
@@ -143,11 +145,11 @@ function nineNodes(x, y, size, border, nodes) {
     }
 }
 
-function drawNode(x, y, size, border, state) {
+function drawNode(x, y, size, border, node) {
     const sideLength = grid.toLength(size) - border * 2;
 
     strokeWeight(0);
-    fill(nodeColor(state));
+    fill(nodeColor(node.state));
     rect(grid.toX(x) + border, grid.toY(y) + border, sideLength, sideLength);
 }
 
@@ -245,7 +247,7 @@ function timeNow() {
     return (new Date()).toISOString().substr(11, 12);
 }
 
-const clusterNodeRequestInterval = 15000;
+const clusterNodeRequestInterval = 1000;
 function requestClusterState() {
     setInterval(requestClusterStateInterval, clusterNodeRequestInterval);
 }
@@ -357,7 +359,7 @@ function clusterStateUpdateSummary(clusterStateFromNode) {
 }
 
 function requestClusterStateFromNodeError(response) {
-    console.log(timeNow(), response);
+    //console.log(timeNow(), response);
 }
 
 function nodeStates(nodes) {

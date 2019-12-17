@@ -159,7 +159,7 @@ class HttpServer {
 
                     @Override
                     public void accept(Member member) {
-                        actorSystem.log().info("{} {} leader {}, oldest {}, {}", ++m, nodes.selfPort, leader(member), oldest(member), member);
+                        //actorSystem.log().info("JSON {} {} leader {}, oldest {}, {}", ++m, nodes.selfPort, leader(member), oldest(member), member);
                         nodes.add(member, leader(member), oldest(member));
                     }
 
@@ -172,9 +172,10 @@ class HttpServer {
                     }
                 });
 
-        StreamSupport.stream(clusterState.getUnreachable().spliterator(), false)
+        clusterState.getUnreachable()
                 .forEach(member -> {
-
+                    //actorSystem.log().info("JSON unreachable {}", member);
+                    nodes.addUnreachable(member);
                 });
 
         return nodes;
@@ -220,7 +221,8 @@ class HttpServer {
             if (isValidPort(port)) {
                 Node node = new Node(port, "unreachable", false, false, false);
                 if (nodes.contains(node)) {
-
+                    nodes.remove(node);
+                    nodes.add(node);
                 }
             }
         }
