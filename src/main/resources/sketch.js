@@ -1,7 +1,10 @@
 
+const clusterNodeRequestMsInterval = 250;
+const drawFPS = 1000 / clusterNodeRequestMsInterval;
+
 function setup() {
     createCanvas(windowWidth, windowHeight);
-    frameRate(1);
+    frameRate(drawFPS);
 
     grid.resize();
 
@@ -11,7 +14,13 @@ function setup() {
 function draw() {
     grid.draw(color(43, 52, 58));
 
+    drawSummary();
+    drawNineNodes();
+}
+
+function drawSummary() {
     frame(0, 0, 18, 42);
+
     Label().setX(0).setY(0).setW(18).setH(2)
             .setBorder(0.3)
             .setKey("Cluster Status")
@@ -20,8 +29,29 @@ function draw() {
             .setKeyColor(color(29, 249, 246))
             .setValueColor(color(255))
             .draw();
-    nineNodes(0, 24, 18, 0.05, clusterState.summary.nodes);
 
+    Label().setX(1).setY(4).setW(12).setH(1.9)
+            .setBorder(0.3)
+            .setKey("Leader")
+            .setValue(clusterState.summary.leader)
+            .setBgColor(color(100, 75))
+            .setKeyColor(color(29, 249, 246))
+            .setValueColor(color(255))
+            .draw();
+
+    Label().setX(1).setY(6).setW(12).setH(1.9)
+            .setBorder(0.3)
+            .setKey("Oldest")
+            .setValue(clusterState.summary.oldest)
+            .setBgColor(color(100, 75))
+            .setKeyColor(color(29, 249, 246))
+            .setValueColor(color(255))
+            .draw();
+
+    nineNodes(0, 24, 18, 0.05, clusterState.summary.nodes);
+}
+
+function drawNineNodes() {
     strokeWeight(2.5);
     stroke(255, 100);
     line(grid.toX(19), grid.toY(0), grid.toX(19 + 3 * 18 + 2), grid.toY(0));
@@ -34,29 +64,21 @@ function draw() {
             .setValueColor(color(255))
             .draw();
 
-    frame(1 * 19, 0 * 14 + 1, 18, 13);
-    frame(2 * 19, 0 * 14 + 1, 18, 13);
-    frame(3 * 19, 0 * 14 + 1, 18, 13);
+    for (row = 0; row < 3; row++) {
+        for (col = 0; col < 3; col++) {
+            const x = (col + 1) * 19;
+            const y = row * 14 + 1
+            const nodeNo = row * 3 + col;
+            frame(x, y, 18, 13);
+            nodeDetails(x, y, 18, 13, nodeNo);
+        }
+    }
 
-    frame(1 * 19, 1 * 14 + 1, 18, 13);
-    frame(2 * 19, 1 * 14 + 1, 18, 13);
-    frame(3 * 19, 1 * 14 + 1, 18, 13);
-
-    frame(1 * 19, 2 * 14 + 1, 18, 13);
-    frame(2 * 19, 2 * 14 + 1, 18, 13);
-    frame(3 * 19, 2 * 14 + 1, 18, 13);
-
-    nineNodes(1 * 19 + 9, 5, 9, 0.025, clusterState.members[0].nodes);
-    nineNodes(2 * 19 + 9, 5, 9, 0.025, clusterState.members[1].nodes);
-    nineNodes(3 * 19 + 9, 5, 9, 0.025, clusterState.members[2].nodes);
-
-    nineNodes(1 * 19 + 9, 19, 9, 0.025, clusterState.members[3].nodes);
-    nineNodes(2 * 19 + 9, 19, 9, 0.025, clusterState.members[4].nodes);
-    nineNodes(3 * 19 + 9, 19, 9, 0.025, clusterState.members[5].nodes);
-
-    nineNodes(1 * 19 + 9, 33, 9, 0.025, clusterState.members[6].nodes);
-    nineNodes(2 * 19 + 9, 33, 9, 0.025, clusterState.members[7].nodes);
-    nineNodes(3 * 19 + 9, 33, 9, 0.025, clusterState.members[8].nodes);
+    for (row = 0; row < 3; row++) {
+        for (col = 0; col < 3; col++) {
+            nineNodes((col + 1) * 19 + 9, row * 14 + 5, 9, 0.025, clusterState.members[row * 3 + col].nodes);
+        }
+    }
 }
 
 function windowResized() {
@@ -132,6 +154,22 @@ function frame(x, y, width, height) {
     line(xr, yt - offset, xr, yb + offset); // right vertical
 }
 
+function nodeDetails(x, y, w, h, nodeNo) {
+    const port = 2551 + nodeNo;
+    const node = clusterState.members[nodeNo].nodes[nodeNo];
+    if (node.state != "offline") {
+        Label().setX(x).setY(y).setW(w).setH(1.5)
+                .setBorder(0.2)
+                .setKey("" + port)
+                .setValue(node.memberState)
+                .setBgColor(color(100, 75))
+                .setKeyColor(color(255, 191, 0))
+                .setValueColor(color(255))
+                .draw();
+
+    }
+}
+
 function nineNodes(x, y, size, border, nodes) {
     const nodeSize = size / 3;
     for (var row = 0; row < 3; row++) {
@@ -158,11 +196,19 @@ function drawNode(x, y, size, border, node) {
 function drawNodePort(x, y, size, border, node) {
     Label().setX(x + border * 2)
             .setY(y + border * 2)
-            .setW(size - border)
-            .setH(size / 6)
+            .setW(size - border * 2)
+            .setH(size / 5.5)
             .setBorder(border)
             .setKey(node.port)
             .setKeyColor(color(255))
+            .draw();
+    Label().setX(x + border * 2)
+            .setY(y + size / 6 + border * 2)
+            .setW(size - border * 2)
+            .setH(size / 6)
+            .setBorder(border)
+            .setValue(node.memberState)
+            .setValueColor(color(255))
             .draw();
 }
 
@@ -254,9 +300,8 @@ function timeNow() {
     return (new Date()).toISOString().substr(11, 12);
 }
 
-const clusterNodeRequestInterval = 500;
 function requestClusterState() {
-    setInterval(requestClusterStateInterval, clusterNodeRequestInterval);
+    setInterval(requestClusterStateInterval, clusterNodeRequestMsInterval);
 }
 
 function requestClusterStateInterval() {
@@ -281,7 +326,7 @@ function clusterStateNodeReset(nodes) {
     const time = (new Date()).getTime();
 
     for (var n = 0; n < 9; n++) {
-        nodes[n] = { node: n + 2551, state: "offline", leader: false, oldest: false, unreachable: false, time: time };
+        clusterStateNodeInit(n);
     }
 }
 
@@ -327,7 +372,7 @@ function clusterStateInit() {
 }
 
 function clusterStateNodeInit(port) {
-    return { node: port, state: "offline", leader: false, oldest: false, unreachable: false, time: (new Date()).getTime() };
+    return { node: port, state: "offline", memberState: "unknown", leader: false, oldest: false, time: (new Date()).getTime() };
 }
 
 function clusterStateUpdateNode(clusterStateFromNode) {
