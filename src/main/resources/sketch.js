@@ -9,30 +9,26 @@ function setup() {
 }
 
 function draw() {
-    const states = clusterStateTemp().states;
-
     grid.draw(color(43, 52, 58));
 
     frame(0, 0, 18, 42);
     Label().setX(0).setY(0).setW(18).setH(2)
             .setBorder(0.3)
             .setKey("Cluster Status")
-            .setValue("Offline")
+            .setValue(inState("up") > 0 ? "Online" : "Offline")
             .setBgColor(color(100, 75))
             .setKeyColor(color(29, 249, 246))
             .setValueColor(color(255))
             .draw();
-    nineNodes(0, 24, 18, 3, clusterState.summary.nodes);
-    // clusterState.summary.leader
-    // clusterState.summary.oldest
+    nineNodes(0, 24, 18, 0.05, clusterState.summary.nodes);
 
     strokeWeight(2.5);
-    stroke(150, 150);
+    stroke(255, 100);
     line(grid.toX(19), grid.toY(0), grid.toX(19 + 3 * 18 + 2), grid.toY(0));
     Label().setX(19).setY(0).setW(19 * 2 + 18).setH(1)
             .setBorder(0.1)
             .setKey("Cluster Nodes")
-            .setValue("9 Up, 0 Offline")
+            .setValue(inState("up") + " Online")
             .setBgColor(color(100, 75))
             .setKeyColor(color(29, 249, 246))
             .setValueColor(color(255))
@@ -50,17 +46,17 @@ function draw() {
     frame(2 * 19, 2 * 14 + 1, 18, 13);
     frame(3 * 19, 2 * 14 + 1, 18, 13);
 
-    nineNodes(1 * 19 + 9, 5, 9, 2, clusterState.members[0].nodes);
-    nineNodes(2 * 19 + 9, 5, 9, 2, clusterState.members[1].nodes);
-    nineNodes(3 * 19 + 9, 5, 9, 2, clusterState.members[2].nodes);
+    nineNodes(1 * 19 + 9, 5, 9, 0.025, clusterState.members[0].nodes);
+    nineNodes(2 * 19 + 9, 5, 9, 0.025, clusterState.members[1].nodes);
+    nineNodes(3 * 19 + 9, 5, 9, 0.025, clusterState.members[2].nodes);
 
-    nineNodes(1 * 19 + 9, 19, 9, 2, clusterState.members[3].nodes);
-    nineNodes(2 * 19 + 9, 19, 9, 2, clusterState.members[4].nodes);
-    nineNodes(3 * 19 + 9, 19, 9, 2, clusterState.members[5].nodes);
+    nineNodes(1 * 19 + 9, 19, 9, 0.025, clusterState.members[3].nodes);
+    nineNodes(2 * 19 + 9, 19, 9, 0.025, clusterState.members[4].nodes);
+    nineNodes(3 * 19 + 9, 19, 9, 0.025, clusterState.members[5].nodes);
 
-    nineNodes(1 * 19 + 9, 33, 9, 2, clusterState.members[6].nodes);
-    nineNodes(2 * 19 + 9, 33, 9, 2, clusterState.members[7].nodes);
-    nineNodes(3 * 19 + 9, 33, 9, 2, clusterState.members[8].nodes);
+    nineNodes(1 * 19 + 9, 33, 9, 0.025, clusterState.members[6].nodes);
+    nineNodes(2 * 19 + 9, 33, 9, 0.025, clusterState.members[7].nodes);
+    nineNodes(3 * 19 + 9, 33, 9, 0.025, clusterState.members[8].nodes);
 }
 
 function windowResized() {
@@ -128,7 +124,7 @@ function frame(x, y, width, height) {
     const yb = grid.toY(y + height);
 
     strokeWeight(2.5);
-    stroke(150, 150);
+    stroke(255, 100);
 
     line(xl - offset, yt, xr + offset, yt); // top horizontal
     line(xl - offset, yb, xr + offset, yb); // bottom horizontal
@@ -146,11 +142,54 @@ function nineNodes(x, y, size, border, nodes) {
 }
 
 function drawNode(x, y, size, border, node) {
-    const sideLength = grid.toLength(size) - border * 2;
+    const sideLength = grid.toLength(size - border * 4);
 
     strokeWeight(0);
     fill(nodeColor(node.state));
-    rect(grid.toX(x) + border, grid.toY(y) + border, sideLength, sideLength);
+    rect(grid.toX(x + border * 2), grid.toY(y + border * 2), sideLength, sideLength);
+
+    if (!(node.state == "offline")) {
+        drawNodePort(x, y, size, border, node);
+        drawNodeIfLeader(x, y, size, border, node);
+        drawNodeIfOldest(x, y, size, border, node);
+    }
+}
+
+function drawNodePort(x, y, size, border, node) {
+    Label().setX(x + border * 2)
+            .setY(y + border * 2)
+            .setW(size - border)
+            .setH(size / 6)
+            .setBorder(border)
+            .setKey(node.port)
+            .setKeyColor(color(255))
+            .draw();
+}
+
+function drawNodeIfLeader(x, y, size, border, node) {
+    if (node.leader) {
+        Label().setX(x + border * 2)
+                .setY(y + size / 2 - border * 2)
+                .setW(size - border)
+                .setH(size / 2)
+                .setBorder(border)
+                .setKey("L")
+                .setKeyColor(color(255))
+                .draw();
+    }
+}
+
+function drawNodeIfOldest(x, y, size, border, node) {
+    if (node.oldest) {
+        Label().setX(x + border * 2)
+                .setY(y + size / 2 - border * 4)
+                .setW(size - border * 4)
+                .setH(size / 2)
+                .setBorder(border)
+                .setValue("O")
+                .setValueColor(color(255))
+                .draw();
+    }
 }
 
 const nodeColors = {
@@ -159,48 +198,14 @@ const nodeColors = {
     up: [50, 255, 100, 200],
     stopping: [200, 200, 50, 200],
     unreachable: [255, 50, 50, 200],
+    down: [255, 255, 255, 200] // TOTO down not yet implemented
 }
 
 function nodeColor(state) {
     return color(nodeColors[state]);
 }
 
-function clusterStateTemp() {
-    const states = ['starting', 'up', 'stopping', 'offline', 'unreachable'];
-    function state() {
-        return states[Math.floor(Math.random() * states.length)];
-    }
-
-    return JSON.parse(
-        '{' +
-            '"states":' +
-                '[' +
-                    '"' + state() + '",' +
-                    '"' + state() + '",' +
-                    '"' + state() + '",' +
-                    '"' + state() + '",' +
-                    '"' + state() + '",' +
-                    '"' + state() + '",' +
-                    '"' + state() + '",' +
-                    '"' + state() + '",' +
-                    '"' + state() + '"' +
-                ']' +
-        '}'
-    );
-}
-
 let = Label = function () {
-    let x;
-    let y;
-    let w;
-    let h;
-    let border;
-    let key = "";
-    let value = "";
-    let bgColor;
-    let keyColor;
-    let valueColor = color(0);
-
     return {
         setX: function(x) { this.x = x; return this; },
         setY: function(y) { this.y = y; return this; },
@@ -220,18 +225,20 @@ let = Label = function () {
             const cb = grid.toLength(this.border);
 
             strokeWeight(0);
-            fill(this.bgColor);
+            fill(this.bgColor || color(0, 0));
             rect(cx, cy, cw, ch);
 
             textSize(ch - cb * 2);
 
-            textAlign(LEFT, CENTER);
-            fill(this.keyColor);
-            text(this.key, cx + cb, cy + ch / 2);
+            if (this.key) {
+                textAlign(LEFT, CENTER);
+                fill(this.keyColor || color(0, 0));
+                text(this.key, cx + cb, cy + ch / 2);
+            }
 
-            if (!(this.valueColor === undefined) && !(this.value === undefined)) {
+            if (this.value) {
                 textAlign(RIGHT, CENTER);
-                fill(this.valueColor);
+                fill(this.valueColor || color(0, 0));
                 text(this.value, cx + cw - cb, cy + ch / 2);
             }
         },
@@ -247,13 +254,13 @@ function timeNow() {
     return (new Date()).toISOString().substr(11, 12);
 }
 
-const clusterNodeRequestInterval = 1000;
+const clusterNodeRequestInterval = 500;
 function requestClusterState() {
     setInterval(requestClusterStateInterval, clusterNodeRequestInterval);
 }
 
 function requestClusterStateInterval() {
-    console.log(timeNow(), "interval");
+    //console.log(timeNow(), "interval");
 
     clusterStateScanAllForDeadNodes();
 
@@ -368,4 +375,32 @@ function nodeStates(nodes) {
         states[n] = nodes[n].state;
     }
     return states;
+}
+
+function inState(state) {
+    return clusterState.summary.nodes.filter(s => s.state == state).length;
+}
+
+labelNodes(26, 2, 8, 2, 0.02, 2551);
+
+function labelNodes(x, y, w, h, border, port) {
+//    const nodeSize = size / 3;
+//    for (var row = 0; row < 3; row++) {
+//        for (var col = 0; col < 3; col++) {
+//            drawNode(x + nodeSize * col, y + nodeSize * row, nodeSize, border, nodes[row * 3 + col]);
+//        }
+//    }
+
+//    for (var n = 0; n < 9; n++) {
+//    }
+//    Label().setX(x)
+//            .setY(y)
+//            .setW(w)
+//            .setH(h)
+//            .setBorder(border)
+//            .setKey("Node")
+//            .setValue("" + port)
+//            .setKeyColor(color(29, 249, 246))
+//            .setValueColor(color(255))
+//            .draw();
 }
