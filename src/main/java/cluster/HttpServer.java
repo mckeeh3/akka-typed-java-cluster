@@ -212,14 +212,14 @@ class HttpServer {
         void add(Member member, boolean leader, boolean oldest) {
             final int port = memberPort(member);
             if (isValidPort(port)) {
-                nodes.add(new Node(port, state(member.status()), "TODO", leader, oldest));
+                nodes.add(new Node(port, state(member.status()), memberStatus(member.status()), leader, oldest));
             }
         }
 
         void addUnreachable(Member member) {
             final int port = memberPort(member);
             if (isValidPort(port)) {
-                Node node = new Node(port, "unreachable", "TODO", false, false);
+                Node node = new Node(port, "unreachable", "unreachable", false, false);
                 if (nodes.contains(node)) {
                     nodes.remove(node);
                     nodes.add(node);
@@ -231,7 +231,7 @@ class HttpServer {
 
         private static String state(MemberStatus memberStatus) {
             if (memberStatus.equals(MemberStatus.down())) {
-                return "offline";
+                return "down";
             } else if (memberStatus.equals(MemberStatus.joining())) {
                 return "starting";
             } else if (memberStatus.equals(MemberStatus.weaklyUp())) {
@@ -246,6 +246,26 @@ class HttpServer {
                 return "stopping";
             } else {
                 return "offline";
+            }
+        }
+
+        private static String memberStatus(MemberStatus memberStatus) {
+            if (memberStatus.equals(MemberStatus.down())) {
+                return "down";
+            } else if (memberStatus.equals(MemberStatus.joining())) {
+                return "joining";
+            } else if (memberStatus.equals(MemberStatus.weaklyUp())) {
+                return "weaklyup";
+            } else if (memberStatus.equals(MemberStatus.up())) {
+                return "up";
+            } else if (memberStatus.equals(MemberStatus.exiting())) {
+                return "exiting";
+            } else if (memberStatus.equals(MemberStatus.leaving())) {
+                return "leaving";
+            } else if (memberStatus.equals(MemberStatus.removed())) {
+                return "removed";
+            } else {
+                return "unknown";
             }
         }
 

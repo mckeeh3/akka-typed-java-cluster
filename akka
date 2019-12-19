@@ -37,13 +37,13 @@ clusterCommand() {
 
   case $command in
     "start")
-      $scriptPath/cluster-start $argument
+      "$scriptPath"/cluster-start "$argument"
       ;;
     "stop")
-      $scriptPath/cluster-stop
+      "$scriptPath"/cluster-stop
       ;;
     "status")
-      $scriptPath/cluster-status
+      "$scriptPath"/cluster-status
       ;;
     *)
       helpCluster
@@ -57,16 +57,16 @@ nodeCommand() {
 
   case $command in
     "start")
-      $scriptPath/node-start $argument
+      "$scriptPath"/node-start "$argument"
       ;;
     "stop")
-      $scriptPath/node-stop $argument
+      "$scriptPath"/node-stop "$argument"
       ;;
     "kill")
-      $scriptPath/node-kill $argument
+      "$scriptPath"/node-kill "$argument"
       ;;
     "tail")
-      $scriptPath/node-tail $argument
+      "$scriptPath"/node-tail "$argument"
       ;;
     *)
       helpNode
@@ -81,10 +81,10 @@ command() {
 
   case $command in
     "cluster")
-      clusterCommand $subCommand $argument
+      clusterCommand "$subCommand" "$argument"
       ;;
     "node")
-      nodeCommand $subCommand $argument
+      nodeCommand "$subCommand" "$argument"
       ;;
     *)
       echo "Invalid command '$command'"
@@ -94,10 +94,10 @@ command() {
   esac
 }
 
-scriptPath=$(dirname $0)
+scriptPath=$(dirname "$0")
 
 if [ $# -eq 0 ] ; then
   helpAll
 else
-  command $1 $2 $3
+  command "$1" "$2" "$3"
 fi

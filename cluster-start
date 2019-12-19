@@ -11,11 +11,11 @@ usage() {
 
 startNode() {
   node=$1
-  $scriptPath/node-start $node
+  "$scriptPath"/node-start "$node"
 }
 
 startNodes() {
-  for i in $(seq $1) ; do startNode $i ; done
+  for i in $(seq "$1") ; do startNode "$i" ; done
 }
 
 [ $# -eq 0 ] && usage
@@ -29,6 +29,6 @@ else
   usage
 fi
 
-scriptPath=$(dirname $0)
+scriptPath=$(dirname "$0")
 
-startNodes $nodes
+startNodes "$nodes"

@@ -4,10 +4,10 @@ nodeStatus() {
   node=$1
   port="855"$node
 
-  httpStatus=$(curl --write-out %{http_code} --silent --output /dev/null http://localhost:$port/cluster/members)
+  httpStatus=$(curl --write-out %{http_code} --silent --output /dev/null http://localhost:"$port"/cluster/members)
 
   if [[ $httpStatus == 200 ]] ; then
-    curl --silent http://localhost:$port/cluster/members | python -m json.tool
+    curl --silent http://localhost:"$port"/cluster/members | python -m json.tool
     exit 0
   fi
 }
