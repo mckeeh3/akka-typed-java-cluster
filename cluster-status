@@ -12,7 +12,7 @@ nodeStatus() {
   fi
 }
 
-for i in $(seq 9) ; do nodeStatus $i ; done
+for i in $(seq 9) ; do nodeStatus "$i" ; done
 
 echo "Unable to get a response from any cluster nodes."
 exit 1

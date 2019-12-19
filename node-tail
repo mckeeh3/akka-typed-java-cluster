@@ -9,19 +9,16 @@ usage() {
 [ $# -eq 0 ] && usage
 
 node=$1
-scriptPath=$(dirname $0)
 scriptPathFull=$(cd $(dirname $0) ; pwd -P)
-scriptFilename=$(basename $scriptPathFull)
-jarFilename=$(find $scriptPath/target -name *allinone.jar)
+scriptFilename=$(basename "$scriptPathFull")
 
 tailNode() {
   node=$1
-  port="255"$node
-  tail -f /tmp/$scriptFilename-$node.log
+  tail -f /tmp/"$scriptFilename"-"$node".log
 }
 
 if [[ $node =~ ^[1-9]$ ]] ; then
-  tailNode $node
+  tailNode "$node"
 else
   echo "Cluster node number $node is invalid. The node number must be 1 through 9."
   usage

@@ -16,6 +16,7 @@ helpNode() {
   echo "./akka node [Start N | stop N | tail N]"
   echo "./akka node start N  # Start the specified cluster node for nodes 1-9."
   echo "./akka node stop N   # Stop the specified cluster node for nodes 1-9."
+  echo "./akka node kill N   # Kill (kill -9) the specified cluster node for nodes 1-9."
   echo "./akka node tail N   # Tail the log file of the specified cluster node for nodes 1-9."
 }
 
@@ -60,6 +61,9 @@ nodeCommand() {
       ;;
     "stop")
       $scriptPath/node-stop $argument
+      ;;
+    "kill")
+      $scriptPath/node-kill $argument
       ;;
     "tail")
       $scriptPath/node-tail $argument

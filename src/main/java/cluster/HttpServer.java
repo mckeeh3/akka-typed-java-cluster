@@ -212,16 +212,18 @@ class HttpServer {
         void add(Member member, boolean leader, boolean oldest) {
             final int port = memberPort(member);
             if (isValidPort(port)) {
-                nodes.add(new Node(port, state(member.status()), leader, oldest, false));
+                nodes.add(new Node(port, state(member.status()), "TODO", leader, oldest));
             }
         }
 
         void addUnreachable(Member member) {
             final int port = memberPort(member);
             if (isValidPort(port)) {
-                Node node = new Node(port, "unreachable", false, false, false);
+                Node node = new Node(port, "unreachable", "TODO", false, false);
                 if (nodes.contains(node)) {
                     nodes.remove(node);
+                    nodes.add(node);
+                } else {
                     nodes.add(node);
                 }
             }
@@ -260,16 +262,16 @@ class HttpServer {
     public static class Node implements Serializable {
         public final int port;
         public final String state;
+        public final String memberState;
         public final boolean leader;
         public final boolean oldest;
-        public final boolean unreachable;
 
-        public Node(int port, String state, boolean leader, boolean oldest, boolean unreachable) {
+        public Node(int port, String state, String memberState, boolean leader, boolean oldest) {
             this.port = port;
             this.state = state;
+            this.memberState = memberState;
             this.leader = leader;
             this.oldest = oldest;
-            this.unreachable = unreachable;
         }
 
         @Override
