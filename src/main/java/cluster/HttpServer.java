@@ -44,7 +44,7 @@ class HttpServer {
         if (portOption.isDefined()) {
             Integer port = Integer.valueOf(portOption.get().toString());
             if (port >= 2551 && port <= 2559) {
-                new HttpServer(port + 6000, actorSystem);
+                new HttpServer(port + 7000, actorSystem);
             }
         }
     }

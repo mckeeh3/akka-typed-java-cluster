@@ -244,7 +244,7 @@ const nodeColors = {
     up: [50, 255, 100, 200],
     stopping: [200, 200, 50, 200],
     unreachable: [255, 50, 50, 200],
-    down: [255, 255, 255, 200] // TOTO down not yet implemented
+    down: [179, 0, 179, 200]
 }
 
 function nodeColor(state) {
@@ -309,7 +309,7 @@ function requestClusterStateInterval() {
 
     clusterStateScanAllForDeadNodes();
 
-    for (var port = 8551; port <= 8559; port++) {
+    for (var port = 9551; port <= 9559; port++) {
         requestClusterStateFromNode(port);
     }
 }

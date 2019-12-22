@@ -3,6 +3,7 @@ package cluster;
 import java.util.Arrays;
 import java.util.List;
 
+import akka.management.javadsl.AkkaManagement;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 
@@ -22,6 +23,7 @@ public class Runner {
 
         ports.forEach(port -> {
             ActorSystem<Void> actorSystem = ActorSystem.create(Main.create(), "cluster", setupClusterNodeConfig(port));
+            AkkaManagement.get(actorSystem.classicSystem()).start();
             HttpServer.start(actorSystem);
         });
     }

@@ -42,6 +42,23 @@
             <artifactId>akka-stream_${scala.version}</artifactId>
             <version>${akka.version}</version>
         </dependency>
+        <dependency> <!-- due to transitive from akka-http -->
+            <groupId>com.typesafe.akka</groupId>
+            <artifactId>akka-cluster-sharding_${scala.version}</artifactId>
+            <version>${akka.version}</version>
+        </dependency>
+
+        <!-- Akka Management -->
+        <dependency>
+            <groupId>com.lightbend.akka.management</groupId>
+            <artifactId>akka-management_${scala.version}</artifactId>
+            <version>${akka.management.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.lightbend.akka.management</groupId>
+            <artifactId>akka-management-cluster-http_${scala.version}</artifactId>
+            <version>${akka.management.version}</version>
+        </dependency>
 
         <!-- Logging -->
         <dependency>
