@@ -30,21 +30,21 @@ function drawSummary() {
             .setValueColor(color(255))
             .draw();
 
-    Label().setX(1).setY(4).setW(12).setH(1.9)
+    Label().setX(1).setY(3).setW(10).setH(1.9)
             .setBorder(0.3)
             .setKey("Leader")
             .setValue(clusterState.summary.leader)
-            .setBgColor(color(100, 75))
-            .setKeyColor(color(29, 249, 246))
+            .setBgColor(isGossipConvergenceNotPossible() ? color(255, 55, 55, 100) : color(100, 75))
+            .setKeyColor(color(255, 191, 0))
             .setValueColor(color(255))
             .draw();
 
-    Label().setX(1).setY(6).setW(12).setH(1.9)
+    Label().setX(1).setY(5).setW(10).setH(1.9)
             .setBorder(0.3)
             .setKey("Oldest")
             .setValue(clusterState.summary.oldest)
             .setBgColor(color(100, 75))
-            .setKeyColor(color(29, 249, 246))
+            .setKeyColor(color(255, 191, 0))
             .setValueColor(color(255))
             .draw();
 
@@ -220,7 +220,7 @@ function drawNodeIfLeader(x, y, size, border, node) {
                 .setH(size / 2)
                 .setBorder(border)
                 .setKey("L")
-                .setKeyColor(color(255))
+                .setKeyColor(isGossipConvergenceNotPossible() ? color(255, 75, 75) : color(255))
                 .draw();
     }
 }
@@ -426,26 +426,8 @@ function inState(state) {
     return clusterState.summary.nodes.filter(s => s.state == state).length;
 }
 
-labelNodes(26, 2, 8, 2, 0.02, 2551);
+//labelNodes(26, 2, 8, 2, 0.02, 2551);
 
-function labelNodes(x, y, w, h, border, port) {
-//    const nodeSize = size / 3;
-//    for (var row = 0; row < 3; row++) {
-//        for (var col = 0; col < 3; col++) {
-//            drawNode(x + nodeSize * col, y + nodeSize * row, nodeSize, border, nodes[row * 3 + col]);
-//        }
-//    }
-
-//    for (var n = 0; n < 9; n++) {
-//    }
-//    Label().setX(x)
-//            .setY(y)
-//            .setW(w)
-//            .setH(h)
-//            .setBorder(border)
-//            .setKey("Node")
-//            .setValue("" + port)
-//            .setKeyColor(color(29, 249, 246))
-//            .setValueColor(color(255))
-//            .draw();
+function isGossipConvergenceNotPossible() {
+    return !(undefined === clusterState.summary.nodes.find(node => node.memberState == "unreachable"));
 }

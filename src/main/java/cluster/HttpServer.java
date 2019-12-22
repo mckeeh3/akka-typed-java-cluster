@@ -17,8 +17,6 @@ import org.slf4j.Logger;
 import scala.Option;
 
 import java.io.*;
-import java.net.InetAddress;
-import java.net.UnknownHostException;
 import java.util.*;
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.ExecutionException;
@@ -54,11 +52,9 @@ class HttpServer {
     private void startHttpServer() {
         try {
             CompletionStage<ServerBinding> serverBindingCompletionStage = Http.get(actorSystem.classicSystem())
-                    .bindAndHandleSync(this::handleHttpRequest, ConnectHttp.toHost(InetAddress.getLocalHost().getHostName(), port), actorMaterializer);
+                    .bindAndHandleSync(this::handleHttpRequest, ConnectHttp.toHost("127.0.0.1", port), actorMaterializer);
 
             serverBindingCompletionStage.toCompletableFuture().get(15, TimeUnit.SECONDS);
-        } catch (UnknownHostException e) {
-            log().error("Unable to access hostname", e);
         } catch (InterruptedException | TimeoutException | ExecutionException e) {
             log().error("Monitor HTTP server error", e);
         } finally {
@@ -143,7 +139,11 @@ class HttpServer {
 
         ClusterEvent.CurrentClusterState clusterState = cluster.state();
 
+        Set<Member> unreachable = clusterState.getUnreachable();
+
         Optional<Member> old = StreamSupport.stream(clusterState.getMembers().spliterator(), false)
+                .filter(member -> member.status().equals(MemberStatus.up()))
+                .filter(member -> !(unreachable.contains(member)))
                 .reduce((older, member) -> older.isOlderThan(member) ? older : member);
 
         Member oldest = old.orElse(cluster.selfMember());
@@ -155,11 +155,8 @@ class HttpServer {
 
         StreamSupport.stream(clusterState.getMembers().spliterator(), false)
                 .forEach(new Consumer<Member>() {
-                    int m = 0;
-
                     @Override
                     public void accept(Member member) {
-                        //actorSystem.log().info("JSON {} {} leader {}, oldest {}, {}", ++m, nodes.selfPort, leader(member), oldest(member), member);
                         nodes.add(member, leader(member), oldest(member));
                     }
 
@@ -173,10 +170,7 @@ class HttpServer {
                 });
 
         clusterState.getUnreachable()
-                .forEach(member -> {
-                    //actorSystem.log().info("JSON unreachable {}", member);
-                    nodes.addUnreachable(member);
-                });
+                .forEach(nodes::addUnreachable);
 
         return nodes;
     }
