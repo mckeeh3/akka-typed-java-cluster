@@ -411,7 +411,10 @@ function clusterStateUpdateSummary(clusterStateFromNode) {
 }
 
 function requestClusterStateFromNodeError(response) {
-    //console.log(timeNow(), response);
+    if (inState("offline") == 9) {
+        clusterState.summary.leader = 0;
+        clusterState.summary.oldest = 0;
+    }
 }
 
 function nodeStates(nodes) {
