@@ -20,6 +20,7 @@ jarFilename=$(find "$scriptPath"/target -name '*allinone.jar*')
 
 while [[ $# -gt 0 ]]; do
   node=$1
+  shift
 
   if [[ $node =~ ^[1-9]$ ]] ; then
     stopNode "$node"
