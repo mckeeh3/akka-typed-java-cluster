@@ -15,13 +15,16 @@ stopNode() {
 
 [ $# -eq 0 ] && usage
 
-node=$1
 scriptPath=$(dirname "$0")
 jarFilename=$(find "$scriptPath"/target -name '*allinone.jar*')
 
-if [[ $node =~ ^[1-9]$ ]] ; then
-  stopNode "$node"
-else
-  echo "Cluster node number $node is invalid. The node number must be 1 through 9."
-  usage
-fi
+while [[ $# -gt 0 ]]; do
+  node=$1
+
+  if [[ $node =~ ^[1-9]$ ]] ; then
+    stopNode "$node"
+  else
+    echo "Cluster node number $node is invalid. The node number must be 1 through 9."
+    usage
+  fi
+done
