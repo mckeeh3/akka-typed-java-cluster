@@ -1,9 +1,9 @@
 #!/bin/bash
 
-# Use this script to stop one Akka cluster node. The command line parameter must be from 1 to 9.
+# Use this script to stop one or more Akka cluster nodes. The command line parameters must be from 1 to 9.
 
 usage() {
-  echo "Usage: $0 node - Stop cluster node, node number must be 1 through 9." ; exit 1
+  echo "Usage: $0 nodes - Stop cluster nodes, node numbers must be 1 through 9." ; exit 1
 }
 
 stopNode() {
