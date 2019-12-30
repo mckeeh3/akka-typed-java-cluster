@@ -38,7 +38,7 @@ clusterCommand() {
 
   case $command in
     "start")
-      "$scriptPath"/cluster-start "$argument"
+      "$scriptPath"/cluster-start $argument
       ;;
     "stop")
       "$scriptPath"/cluster-stop
