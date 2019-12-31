@@ -63,7 +63,7 @@ class HttpServer {
     }
 
     private HttpResponse handleHttpRequest(HttpRequest httpRequest) {
-        log().info("HTTP request '{}", httpRequest.getUri().path());
+        //log().info("HTTP request '{}'", httpRequest.getUri().path());
         switch (httpRequest.getUri().path()) {
             case "/":
                 return htmlFileResponse("index.html");

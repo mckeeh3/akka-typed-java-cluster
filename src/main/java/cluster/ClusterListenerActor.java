@@ -1,13 +1,17 @@
 package cluster;
 
 import akka.actor.typed.Behavior;
-import akka.actor.typed.javadsl.*;
+import akka.actor.typed.javadsl.AbstractBehavior;
+import akka.actor.typed.javadsl.ActorContext;
+import akka.actor.typed.javadsl.Behaviors;
+import akka.actor.typed.javadsl.Receive;
 import akka.cluster.ClusterEvent;
 import akka.cluster.Member;
 import akka.cluster.typed.Cluster;
 import org.slf4j.Logger;
 
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.Consumer;
 import java.util.stream.StreamSupport;
 
@@ -50,13 +54,15 @@ class ClusterListenerActor extends AbstractBehavior<ClusterEvent.ClusterDomainEv
 
         Member oldest = old.orElse(cluster.selfMember());
 
+        Set<Member> unreachable = currentClusterState.getUnreachable();
+
         StreamSupport.stream(currentClusterState.getMembers().spliterator(), false)
                 .forEach(new Consumer<Member>() {
                     int m = 0;
 
                     @Override
                     public void accept(Member member) {
-                        log.info("clusterListener {} {}{}{}", ++m, leader(member), oldest(member), member);
+                        log.info("clusterListener {} {}{}{}{}", ++m, leader(member), oldest(member), unreachable(member), member);
                     }
 
                     private String leader(Member member) {
@@ -66,7 +72,20 @@ class ClusterListenerActor extends AbstractBehavior<ClusterEvent.ClusterDomainEv
                     private String oldest(Member member) {
                         return oldest.equals(member) ? "(OLDEST) " : "";
                     }
+
+                    private String unreachable(Member member) {
+                        return unreachable.contains(member) ? "(UNREACHABLE) " : "";
+                    }
                 });
 
+        currentClusterState.getUnreachable()
+                .forEach(new Consumer<Member>() {
+                    int m = 0;
+
+                    @Override
+                    public void accept(Member member) {
+                        log.info("{} {} {} (unreachable)", getClass().getSimpleName(), ++m, member);
+                    }
+                });
     }
 }
