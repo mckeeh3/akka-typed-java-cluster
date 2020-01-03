@@ -1,0 +1,41 @@
+#!/bin/bash
+
+# Use this script to block one or more Akka cluster nodes network access.
+# The command line parameters must be from 1 to 9.
+# Root user (sudo) is required to create blocking rules.
+
+usage() {
+  echo "Usage: $0 nodes - Block cluster nodes network access, node numbers must be 1 through 9." ; exit 1
+}
+
+block() {
+  node=$1
+
+  if hash pfctl 2>/dev/null; then
+    (pfctl -sr 2>/dev/null; echo "block drop quick on lo0 proto tcp to port 255$node") | pfctl -f - 2>/dev/null
+  elif hash iptables 2>/dev/null; then
+    iptables -A INPUT -p tcp --dport 255$node -j DROP
+  else
+    usage
+  fi
+}
+
+if ! [ $(id -u) = 0 ]; then
+  echo "Root user (sudo) required."
+  exit 1
+fi
+
+[ $# -eq 0 ] && usage
+
+while [[ $# -gt 0 ]]; do
+  node=$1
+  shift
+
+  if [[ $node =~ ^[1-9]$ ]] ; then
+    block $node
+  else
+    echo "Cluster node number $node is invalid. The node number must be 1 through 9."
+    usage
+  fi
+
+done

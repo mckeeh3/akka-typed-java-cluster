@@ -1,0 +1,27 @@
+#!/bin/bash
+
+# Use this script to view the current network filter settings.
+# Network filters are used to stop network traffic to cluster nodes.
+# The pfctl command is used on OSX and the iptables command is used on Linux systems.
+# Windows is not currently supported.
+
+usage() {
+  echo "Usage: $0 - View the currently blocked cluster nodes." ; exit 1
+}
+
+view() {
+  if hash pfctl 2>/dev/null; then
+    pfctl -sr 2>/dev/null
+  elif hash iptables 2>/dev/null; then
+    iptables -n -L INPUT
+  else
+    echo "Not supported on this OS. OSX and Linux currently supported."
+ fi
+}
+
+if ! [ $(id -u) = 0 ]; then
+  echo "Root user (sudo) required."
+  exit 1
+fi
+
+view
