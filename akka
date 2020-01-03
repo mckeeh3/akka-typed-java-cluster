@@ -7,6 +7,7 @@ helpCluster() {
   echo "./akka cluster start N...  # Starts one or more cluster nodes as specified by N, which must be 1-9."
   echo "./akka cluster stop        # Stops all currently cluster nodes."
   echo "./akka cluster status      # Shows an Akka Management view of the cluster status/state."
+  echo "./akka cluster monitor N   # Opens an Akka cluster monitor web page hosted on the specified node, which must be 1-9."
 }
 
 helpNode() {
@@ -56,6 +57,9 @@ clusterCommand() {
       ;;
     "status")
       "$scriptPath"/cluster-status
+      ;;
+    "monitor")
+      "$scriptPath"/cluster-monitor $argument
       ;;
     *)
       helpCluster

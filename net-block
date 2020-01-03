@@ -13,8 +13,10 @@ block() {
 
   if hash pfctl 2>/dev/null; then
     (pfctl -sr 2>/dev/null; echo "block drop quick on lo0 proto tcp to port 255$node") | pfctl -f - 2>/dev/null
+    echo "blocked node $node, port 255$node (OSX)"
   elif hash iptables 2>/dev/null; then
     iptables -A INPUT -p tcp --dport 255$node -j DROP
+    echo "blocked node $node, port 255$node (Linux)"
   else
     usage
   fi
