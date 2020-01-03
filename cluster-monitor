@@ -9,9 +9,9 @@ usage() {
 openMonitorWebPage() {
   node=$1
 
-  if hash open; then
+  if hash open 2>/dev/null; then
     open http://127.0.0.1:955$node/
-  elif hash xdg-open; then
+elif hash xdg-open 2>/dev/null; then
     xdg-open http://127.0.0.1:955$node/
   fi
 }
