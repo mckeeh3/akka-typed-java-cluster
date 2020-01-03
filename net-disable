@@ -1,0 +1,25 @@
+#!/bin/bash
+
+# Use this script to enable packet filtering, which disallows blocking network access to cluster nodes.
+# Root user (sudo) is required to create blocking rules.
+
+usage() {
+  echo "Usage: $0 nodes - Disable packet filtering, which disallows blocking network access to cluster nodes. (OSX only)" ; exit 1
+}
+
+disable() {
+  if hash pfctl 2>/dev/null; then
+    pfctl -d 2>/dev/null
+  elif hash iptables 2>/dev/null; then
+    echo "OSX only."
+  else
+    echo "Not supported on this OS. OSX and Linux currently supported."
+  fi
+}
+
+if ! [ $(id -u) = 0 ]; then
+  echo "Root user (sudo) required."
+  exit 1
+fi
+
+disable

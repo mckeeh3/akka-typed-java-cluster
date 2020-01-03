@@ -29,6 +29,8 @@ helpNet() {
   echo "./akka net block N...  # Block network access to node ports, ports 255N, nodes N 1-9."
   echo "./akka net unblock     # Reset the network blocking rules."
   echo "./akka net view        # View the current network blocking rules."
+  echo "./akka net enable      # Enable packet filtering, which enables blocking network access to cluster nodes. (OSX only)"
+  echo "./akka net disable     # Disable packet filtering, which disables blocking network access to cluster nodes. (OSX only)"
 }
 
 helpAll() {
@@ -100,6 +102,12 @@ netCommand() {
     arguments=$@
 
     case $command in
+      "enable")
+        "$scriptPath"/net-enable
+        ;;
+      "disable")
+        "$scriptPath"/net-disable
+        ;;
       "block")
         "$scriptPath"/net-block $arguments
         ;;
