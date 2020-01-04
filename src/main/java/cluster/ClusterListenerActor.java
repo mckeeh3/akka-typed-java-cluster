@@ -38,7 +38,7 @@ class ClusterListenerActor extends AbstractBehavior<ClusterEvent.ClusterDomainEv
     }
 
     private Behavior<ClusterEvent.ClusterDomainEvent> logClusterEvent(Object clusterEventMessage) {
-        log.info("{} sent to {}", clusterEventMessage, cluster.selfMember());
+        log.info("{} - {} sent to {}", getClass().getSimpleName(), clusterEventMessage, cluster.selfMember());
         logClusterMembers();
 
         return Behaviors.same();
@@ -49,12 +49,12 @@ class ClusterListenerActor extends AbstractBehavior<ClusterEvent.ClusterDomainEv
     }
 
     private void logClusterMembers(ClusterEvent.CurrentClusterState currentClusterState) {
-        Optional<Member> old = StreamSupport.stream(currentClusterState.getMembers().spliterator(), false)
+        final Optional<Member> old = StreamSupport.stream(currentClusterState.getMembers().spliterator(), false)
                 .reduce((older, member) -> older.isOlderThan(member) ? older : member);
 
-        Member oldest = old.orElse(cluster.selfMember());
-
-        Set<Member> unreachable = currentClusterState.getUnreachable();
+        final Member oldest = old.orElse(cluster.selfMember());
+        final Set<Member> unreachable = currentClusterState.getUnreachable();
+        final String className = getClass().getSimpleName();
 
         StreamSupport.stream(currentClusterState.getMembers().spliterator(), false)
                 .forEach(new Consumer<Member>() {
@@ -62,7 +62,7 @@ class ClusterListenerActor extends AbstractBehavior<ClusterEvent.ClusterDomainEv
 
                     @Override
                     public void accept(Member member) {
-                        log.info("clusterListener {} {}{}{}{}", ++m, leader(member), oldest(member), unreachable(member), member);
+                        log.info("{} - {} {}{}{}{}", className, ++m, leader(member), oldest(member), unreachable(member), member);
                     }
 
                     private String leader(Member member) {
@@ -84,7 +84,7 @@ class ClusterListenerActor extends AbstractBehavior<ClusterEvent.ClusterDomainEv
 
                     @Override
                     public void accept(Member member) {
-                        log.info("{} {} {} (unreachable)", getClass().getSimpleName(), ++m, member);
+                        log.info("{} - {} {} (unreachable)", getClass().getSimpleName(), ++m, member);
                     }
                 });
     }
