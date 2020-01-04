@@ -407,10 +407,6 @@ function clusterStateUpdateSummary(clusterStateFromNode) {
         clusterState.summary.oldest = oldestNode(clusterStateFromNode.nodes).port;
     }
 
-//    if (clusterStateFromNode.oldest) { // TODO fix this - oldest should be derived from the leader cluster state
-//        clusterState.summary.oldest = clusterStateFromNode.selfPort;
-//    }
-
     summaryStates = nodeStates(clusterState.summary.nodes);
     memberStates = nodeStates(clusterState.members[0].nodes);
 }
