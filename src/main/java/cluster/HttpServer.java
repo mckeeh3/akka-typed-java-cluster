@@ -23,6 +23,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
 class HttpServer {
@@ -148,6 +149,8 @@ class HttpServer {
 
         Member oldest = old.orElse(cluster.selfMember());
 
+        List<Integer> seedNodePorts = seedNodePorts(actorSystem);
+
         final Nodes nodes = new Nodes(
                 memberPort(cluster.selfMember()),
                 cluster.selfMember().address().equals(clusterState.getLeader()),
@@ -157,7 +160,7 @@ class HttpServer {
                 .forEach(new Consumer<Member>() {
                     @Override
                     public void accept(Member member) {
-                        nodes.add(member, leader(member), oldest(member));
+                        nodes.add(member, leader(member), oldest(member), seedNode(member));
                     }
 
                     private boolean leader(Member member) {
@@ -166,6 +169,10 @@ class HttpServer {
 
                     private boolean oldest(Member member) {
                         return oldest.equals(member);
+                    }
+
+                    private boolean seedNode(Member member) {
+                        return seedNodePorts.contains(memberPort(member));
                     }
                 });
 
@@ -191,6 +198,15 @@ class HttpServer {
         return 0;
     }
 
+    private static List<Integer> seedNodePorts(ActorSystem actorSystem) {
+        return actorSystem.settings().config().getList("akka.cluster.seed-nodes")
+                .stream().map(s -> s.unwrapped().toString())
+                .map(s -> {
+                    String[] split = s.split(":");
+                    return split.length == 0 ? 0 : Integer.parseInt(split[split.length - 1]);
+                }).collect(Collectors.toList());
+    }
+
     public static class Nodes implements Serializable {
         public final int selfPort;
         public final boolean leader;
@@ -203,17 +219,17 @@ class HttpServer {
             this.oldest = oldest;
         }
 
-        void add(Member member, boolean leader, boolean oldest) {
+        void add(Member member, boolean leader, boolean oldest, boolean seedNode) {
             final int port = memberPort(member);
             if (isValidPort(port)) {
-                nodes.add(new Node(port, state(member.status()), memberStatus(member.status()), leader, oldest));
+                nodes.add(new Node(port, state(member.status()), memberStatus(member.status()), leader, oldest, seedNode));
             }
         }
 
         void addUnreachable(Member member) {
             final int port = memberPort(member);
             if (isValidPort(port)) {
-                Node node = new Node(port, "unreachable", "unreachable", false, false);
+                Node node = new Node(port, "unreachable", "unreachable", false, false, false);
                 if (nodes.contains(node)) {
                     nodes.remove(node);
                     nodes.add(node);
@@ -279,13 +295,15 @@ class HttpServer {
         public final String memberState;
         public final boolean leader;
         public final boolean oldest;
+        public final boolean seedNode;
 
-        public Node(int port, String state, String memberState, boolean leader, boolean oldest) {
+        public Node(int port, String state, String memberState, boolean leader, boolean oldest, boolean seedNode) {
             this.port = port;
             this.state = state;
             this.memberState = memberState;
             this.leader = leader;
             this.oldest = oldest;
+            this.seedNode = seedNode;
         }
 
         @Override

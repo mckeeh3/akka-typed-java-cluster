@@ -166,7 +166,14 @@ function nodeDetails(x, y, w, h, nodeNo) {
                 .setKeyColor(color(255, 191, 0))
                 .setValueColor(color(255))
                 .draw();
+    }
 
+    if (node.seedNode) {
+        Label().setX(x).setY(y + h - 1).setW(w).setH(1)
+                .setBorder(0.15)
+                .setKey("seed node")
+                .setKeyColor(color(255))
+                .draw();
     }
 }
 
