@@ -391,8 +391,8 @@ function clusterStateUpdateNode(clusterStateFromNode) {
 }
 
 function clusterStateUpdateSummary(clusterStateFromNode) {
-    const leaderNodesUp = clusterState.summary.nodes.filter(n => n.memberState == "up").length;
-    const nodesUp = clusterStateFromNode.nodes.filter(n => n.memberState == "up").length;
+    const leaderNodesUp = upCount(clusterState.summary.nodes);
+    const nodesUp = upCount(clusterStateFromNode.nodes);
 
     if (clusterStateFromNode.leader && nodesUp >= leaderNodesUp) {
         clusterState.summary.leader = clusterStateFromNode.selfPort;
@@ -403,14 +403,24 @@ function clusterStateUpdateSummary(clusterStateFromNode) {
             node.time = (new Date()).getTime();
             clusterState.summary.nodes[port - 2551] = node;
         }
+
+        clusterState.summary.oldest = oldestNode(clusterStateFromNode.nodes).port;
     }
 
-    if (clusterStateFromNode.oldest) { // TODO fix this - oldest should be derived from the leader cluster state
-        clusterState.summary.oldest = clusterStateFromNode.selfPort;
-    }
+//    if (clusterStateFromNode.oldest) { // TODO fix this - oldest should be derived from the leader cluster state
+//        clusterState.summary.oldest = clusterStateFromNode.selfPort;
+//    }
 
     summaryStates = nodeStates(clusterState.summary.nodes);
     memberStates = nodeStates(clusterState.members[0].nodes);
+}
+
+function upCount(nodes) {
+    return nodes.filter(n => n.memberState == "up").length;
+}
+
+function oldestNode(nodes) {
+    return nodes.find(n => n.oldest);
 }
 
 function requestClusterStateFromNodeError(response) {
