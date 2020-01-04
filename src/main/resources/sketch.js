@@ -391,7 +391,10 @@ function clusterStateUpdateNode(clusterStateFromNode) {
 }
 
 function clusterStateUpdateSummary(clusterStateFromNode) {
-    if (clusterStateFromNode.leader) {
+    const leaderNodesUp = clusterState.summary.nodes.filter(n => n.memberState == "up").length;
+    const nodesUp = clusterStateFromNode.nodes.filter(n => n.memberState == "up").length;
+
+    if (clusterStateFromNode.leader && nodesUp >= leaderNodesUp) {
         clusterState.summary.leader = clusterStateFromNode.selfPort;
 
         for (var n = 0; n < clusterStateFromNode.nodes.length; n++) {
