@@ -1,15 +1,15 @@
 #!/bin/bash
 
-# Use this script to stop one or more Akka cluster nodes. The command line parameters must be from 1 to 9.
+# Use this script to kill (kill -9) one or more Akka cluster nodes. The command line parameters must be from 1 to 9.
 
 usage() {
-  echo "Usage: $0 nodes - Stop cluster nodes, node numbers must be 1 through 9." ; exit 1
+  echo "Usage: $0 nodes - Kill cluster nodes, node numbers must be 1 through 9." ; exit 1
 }
 
-stopNode() {
+killNode() {
   node=$1
   port="255"$node
-  echo "Stop node $1 on port $port"
+  echo "Kill node $1 on port $port"
   pkill -9 -f "$(basename "$jarFilename") $port"
 }
 
@@ -23,7 +23,7 @@ while [[ $# -gt 0 ]]; do
   shift
 
   if [[ $node =~ ^[1-9]$ ]] ; then
-    stopNode "$node"
+    killNode "$node"
   else
     echo "Cluster node number $node is invalid. The node number must be 1 through 9."
     usage
