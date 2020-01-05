@@ -67,13 +67,13 @@ class HttpServer {
         //log().info("HTTP request '{}'", httpRequest.getUri().path());
         switch (httpRequest.getUri().path()) {
             case "/":
-                return htmlFileResponse("index.html");
+                return htmlFileResponse("dashboard.html");
+            case "/dashboard.js":
+                return jsFileResponse("dashboard.js");
             case "/p5.js":
                 return jsFileResponse("p5.js");
             case "/p5.sound.js":
                 return jsFileResponse("p5.sound.js");
-            case "/sketch.js":
-                return jsFileResponse("sketch.js");
             case "/cluster-state":
                 return jsonResponse();
             default:

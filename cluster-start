@@ -6,7 +6,7 @@
 # N is the node number. The Akka port number is set to 255N, N is the node number.
 
 usage() {
-  echo "Usage: $0 [nodes] - Number of cluster nodes, number must be 1 through 9. Default is 9." ; exit 1
+  echo "Usage: $0 [N] - Number of cluster nodes, number must be 1 through 9. Default is 9." ; exit 1
 }
 
 startNode() {

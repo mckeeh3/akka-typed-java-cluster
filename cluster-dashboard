@@ -1,12 +1,12 @@
 #!/bin/bash
 
-# Opens an Akka cluster monitor web page on the specified node, nodes 1-9.
+# Opens an Akka cluster dashboard web page on the specified node, nodes 1-9.
 
 usage() {
-    echo "Usage: $0 [node] - Opens an Akka cluster monitor web page on the specified node, nodes 1-9." ; exit 1
+    echo "Usage: $0 [node] - Opens an Akka cluster dashboard web page on the specified node, nodes 1-9." ; exit 1
 }
 
-openMonitorWebPage() {
+openDashboardWebPage() {
   node=$1
 
   if hash open 2>/dev/null; then
@@ -21,7 +21,7 @@ elif hash xdg-open 2>/dev/null; then
 node=$1
 
 if [[ $node =~ ^[1-9]$ ]] ; then
-  openMonitorWebPage $node
+  openDashboardWebPage $node
 else
   echo "Cluster node number $node is invalid. The node number must be 1 through 9."
   usage

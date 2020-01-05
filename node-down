@@ -13,7 +13,7 @@ downNode() {
   httpStatus=$(curl --write-out %{http_code} --silent --output /dev/null http://localhost:"$port"/cluster/members)
 
   if [[ $httpStatus == 200 ]] ; then
-    curl --silent -X PUT -F "operation=Down" http://localhost:"$port"/cluster/members/cluster@127.0.0.1:255"$node" | python -m json.tool
+    curl --silent -X PUT -F "operation=Down" http://localhost:"$port"/cluster/members/cluster@127.0.0.1:255"$node" --output /dev/null
     return
   fi
 }

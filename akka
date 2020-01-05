@@ -1,17 +1,17 @@
 #!/bin/bash
 
 helpCluster() {
-  echo "Use the cluster command to start, stop, and view the status of Akka cluster nodes."
+  echo "Cluster commands are used to start, stop, view status, and view that dashboard Akka cluster nodes."
   echo
-  echo "./akka cluster [start N | stop | status]"
-  echo "./akka cluster start N...  # Starts one or more cluster nodes as specified by N, which must be 1-9."
-  echo "./akka cluster stop        # Stops all currently cluster nodes."
-  echo "./akka cluster status      # Shows an Akka Management view of the cluster status/state."
-  echo "./akka cluster monitor N   # Opens an Akka cluster monitor web page hosted on the specified node, which must be 1-9."
+  echo "./akka cluster [start N | stop | status | dashboard N]"
+  echo "./akka cluster start N      # Starts one or more cluster nodes as specified by N, which must be 1-9."
+  echo "./akka cluster stop         # Stops all currently cluster nodes."
+  echo "./akka cluster status       # Shows an Akka Management view of the cluster status/state."
+  echo "./akka cluster dashboard N  # Opens an Akka cluster dashboard web page hosted on the specified node, which must be 1-9."
 }
 
 helpNode() {
-  echo "Use the node command to start, stop, kill, down, or tail the log of cluster nodes."
+  echo "Node commands are used to start, stop, kill, down, or tail the log of cluster nodes."
   echo "Nodes are started on port 255N and management port 855N, N is the node number 1-9."
   echo
   echo "./akka node [start N | stop N | kill N | down N | tail N]"
@@ -23,9 +23,9 @@ helpNode() {
 }
 
 helpNet() {
-  echo "Use the net command to block and unblock network access to cluster nodes."
+  echo "Net commands are used to block and unblock network access to cluster nodes."
   echo
-  echo "./akka net block N | unblock | view"
+  echo "./akka net block N | unblock | view | enable | disable"
   echo "./akka net block N...  # Block network access to node ports, ports 255N, nodes N 1-9."
   echo "./akka net unblock     # Reset the network blocking rules."
   echo "./akka net view        # View the current network blocking rules."
@@ -34,10 +34,10 @@ helpNet() {
 }
 
 helpAll() {
-  echo "This CLI is used to start, stop and monitor nodes in an Akka cluster."
+  echo "This CLI is used to start, stop and view the dashboard nodes in an Akka cluster."
   echo
   echo "These commands manage the Akka cluster as defined in this project. A cluster"
-  echo "of nodes is started using the JAR file build from this project's Maven POM file."
+  echo "of nodes is started using the JAR file built by this project's Maven POM file."
   echo
   helpCluster
   echo
@@ -60,10 +60,12 @@ clusterCommand() {
     "status")
       "$scriptPath"/cluster-status
       ;;
-    "monitor")
-      "$scriptPath"/cluster-monitor $argument
+    "dashboard")
+      "$scriptPath"/cluster-dashboard $argument
       ;;
     *)
+      echo "Invalid subcommand '$command'"
+      echo
       helpCluster
       ;;
   esac
@@ -91,36 +93,40 @@ nodeCommand() {
       "$scriptPath"/node-tail $arguments
       ;;
     *)
+      echo "Invalid subcommand '$command'"
+      echo
       helpNode
       ;;
   esac
 }
 
 netCommand() {
-    command=$1
-    shift
-    arguments=$@
+  command=$1
+  shift
+  arguments=$@
 
-    case $command in
-      "enable")
-        "$scriptPath"/net-enable
-        ;;
-      "disable")
-        "$scriptPath"/net-disable
-        ;;
-      "block")
-        "$scriptPath"/net-block $arguments
-        ;;
-      "unblock")
-        "$scriptPath"/net-unblock $arguments
-        ;;
-      "view")
-        "$scriptPath"/net-view $arguments
-        ;;
-      *)
-        helpNet
-        ;;
-    esac
+  case $command in
+    "enable")
+      "$scriptPath"/net-enable
+      ;;
+    "disable")
+      "$scriptPath"/net-disable
+      ;;
+    "block")
+      "$scriptPath"/net-block $arguments
+      ;;
+    "unblock")
+      "$scriptPath"/net-unblock $arguments
+      ;;
+    "view")
+      "$scriptPath"/net-view $arguments
+      ;;
+    *)
+      echo "Invalid subcommand '$command'"
+      echo
+      helpNet
+      ;;
+  esac
 }
 
 parseCommand() {
