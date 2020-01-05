@@ -1,5 +1,5 @@
 
-const clusterNodeRequestMsInterval = 250;
+const clusterNodeRequestMsInterval = 200;
 const drawFPS = 1000 / clusterNodeRequestMsInterval;
 
 function setup() {
@@ -398,24 +398,24 @@ function clusterStateUpdateNode(clusterStateFromNode) {
 }
 
 function clusterStateUpdateSummary(clusterStateFromNode) {
-    const leaderNodesUp = upCount(clusterState.summary.nodes);
-    const nodesUp = upCount(clusterStateFromNode.nodes);
+    const nowPort = clusterState.summary.leader;
+    const newPort = clusterStateFromNode.selfPort;
+    const nowNodesUp = upCount(clusterState.summary.nodes);
+    const newNodesUp = upCount(clusterStateFromNode.nodes);
+    const isNewLeader = clusterStateFromNode.leader;
 
-    if (clusterStateFromNode.leader && nodesUp >= leaderNodesUp) {
-        clusterState.summary.leader = clusterStateFromNode.selfPort;
+    if (isNewLeader && (newNodesUp >= nowNodesUp || nowPort == newPort)) {
+        clusterState.summary.leader = newPort;
 
         for (var n = 0; n < clusterStateFromNode.nodes.length; n++) {
-            const port = clusterStateFromNode.nodes[n].port;
             const node = clusterStateFromNode.nodes[n];
+            const port = node.port;
             node.time = (new Date()).getTime();
             clusterState.summary.nodes[port - 2551] = node;
         }
 
         clusterState.summary.oldest = oldestNode(clusterStateFromNode.nodes).port;
     }
-
-    summaryStates = nodeStates(clusterState.summary.nodes);
-    memberStates = nodeStates(clusterState.members[0].nodes);
 }
 
 function upCount(nodes) {
@@ -434,18 +434,12 @@ function requestClusterStateFromNodeError(response) {
 }
 
 function nodeStates(nodes) {
-    states = [];
-    for (var n = 0; n < 9; n++) {
-        states[n] = nodes[n].state;
-    }
-    return states;
+    return nodes.map(n => n.state);
 }
 
 function inState(state) {
     return clusterState.summary.nodes.filter(s => s.state == state).length;
 }
-
-//labelNodes(26, 2, 8, 2, 0.02, 2551);
 
 function isGossipConvergenceNotPossible() {
     return !(undefined === clusterState.summary.nodes.find(node => node.memberState == "unreachable"));
