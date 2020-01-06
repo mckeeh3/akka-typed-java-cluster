@@ -3,18 +3,18 @@
 helpCluster() {
   echo "Cluster commands are used to start, stop, view status, and view that dashboard Akka cluster nodes."
   echo
-  echo "./akka cluster [start N | stop | status | dashboard N]"
-  echo "./akka cluster start N      # Starts one or more cluster nodes as specified by N, which must be 1-9."
-  echo "./akka cluster stop         # Stops all currently cluster nodes."
-  echo "./akka cluster status       # Shows an Akka Management view of the cluster status/state."
-  echo "./akka cluster dashboard N  # Opens an Akka cluster dashboard web page hosted on the specified node, which must be 1-9."
+  echo "./akka cluster start N | stop | status | dashboard [N]"
+  echo "./akka cluster start [N]      # Starts one or more cluster nodes as specified by [N] or default 9, which must be 1-9."
+  echo "./akka cluster stop           # Stops all currently cluster nodes."
+  echo "./akka cluster status         # Shows an Akka Management view of the cluster status/state."
+  echo "./akka cluster dashboard [N]  # Opens an Akka cluster dashboard web page hosted on the specified [N] or default 1, which must be 1-9."
 }
 
 helpNode() {
   echo "Node commands are used to start, stop, kill, down, or tail the log of cluster nodes."
   echo "Nodes are started on port 255N and management port 855N, N is the node number 1-9."
   echo
-  echo "./akka node [start N | stop N | kill N | down N | tail N]"
+  echo "./akka node start N | stop N | kill N | down N | tail N"
   echo "./akka node start N...  # Start one or more cluster nodes for nodes 1-9."
   echo "./akka node stop N...   # Stop one or more cluster nodes for nodes 1-9."
   echo "./akka node kill N...   # Kill (kill -9) one or more cluster nodes for nodes 1-9."

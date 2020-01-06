@@ -1,9 +1,9 @@
 #!/bin/bash
 
-# Opens an Akka cluster dashboard web page on the specified node, nodes 1-9.
+# Opens an Akka cluster dashboard web page on the specified node, nodes 1-9, default 1.
 
 usage() {
-    echo "Usage: $0 [node] - Opens an Akka cluster dashboard web page on the specified node, nodes 1-9." ; exit 1
+    echo "Usage: $0 [N] - Opens an Akka cluster dashboard web page on the specified node N, nodes 1-9, default 1." ; exit 1
 }
 
 openDashboardWebPage() {
@@ -16,9 +16,7 @@ elif hash xdg-open 2>/dev/null; then
   fi
 }
 
-[ $# -eq 0 ] && usage
-
-node=$1
+[[ $# = 0 ]] && node=1 || node=$1
 
 if [[ $node =~ ^[1-9]$ ]] ; then
   openDashboardWebPage $node
