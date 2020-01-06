@@ -172,7 +172,7 @@ function nodeDetails(x, y, w, h, nodeNo) {
         Label().setX(x).setY(y + h - 1).setW(w).setH(1)
                 .setBorder(0.15)
                 .setKey("seed node")
-                .setKeyColor(color(255))
+                .setKeyColor(color(255, 128, 0))
                 .draw();
     }
 }
