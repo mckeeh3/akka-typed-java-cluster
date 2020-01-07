@@ -11,8 +11,12 @@ openDashboardWebPage() {
 
   if hash open 2>/dev/null; then
     open http://127.0.0.1:955$node/
-elif hash xdg-open 2>/dev/null; then
+  elif hash xdg-open 2>/dev/null; then
     xdg-open http://127.0.0.1:955$node/
+  elif hash cmd 2>/dev/null; then
+    cmd /c start http://127.0.0.1:955$node/
+  else
+    echo "OS \"$OSTYPE\" is not currently supported."
   fi
 }
 
