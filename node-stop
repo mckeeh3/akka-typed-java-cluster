@@ -10,7 +10,11 @@ stopNode() {
   node=$1
   port="255"$node
   echo "Stop node $1 on port $port"
-  pkill -f "$(basename "$jarFilename") $port"
+  if hash pkill; then
+    pkill -f "$(basename "$jarFilename") $port"
+  else
+    echo "pkill command required. For cygwin please intatll the procps-ng package."
+  fi
 }
 
 [ $# -eq 0 ] && usage
