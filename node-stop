@@ -13,7 +13,7 @@ stopNode() {
   if hash pkill 2>/dev/null; then
     pkill -f "$(basename "$jarFilename") $port"
   else
-    echo "pkill command required. For cygwin please intatll the procps-ng package."
+    echo "Error: pkill command required. For cygwin please intatll the procps-ng package."
   fi
 }
 
