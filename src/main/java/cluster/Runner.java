@@ -11,11 +11,19 @@ import akka.actor.typed.ActorSystem;
 
 public class Runner {
     public static void main(String[] args) {
+        Runtime.getRuntime().addShutdownHook(new Thread() {
+            public void run() {
+                System.out.println("Main shutdown hook");
+            }
+        });
+
         if (args.length == 0) {
             startupClusterNodes(Arrays.asList("2551", "2552", "0"));
         } else {
             startupClusterNodes(Arrays.asList(args));
         }
+
+        System.out.println("Main exiting");
     }
 
     private static void startupClusterNodes(List<String> ports) {
