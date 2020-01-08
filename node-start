@@ -13,7 +13,7 @@ startNode() {
   node=$1
   port="255"$node
   export akka_management_http_port="855"$node
-  echo "Start node $1 on port $port, management port $akka_management_http_port"
+  echo "Start node $1 on port $port, management port $akka_management_http_port, HTTP port 955$node"
   java -jar "$jarFilename" "$port" &> /tmp/"$scriptFilename"-"$node".log &
 }
 
