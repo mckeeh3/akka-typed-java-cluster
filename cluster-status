@@ -1,5 +1,7 @@
 #!/bin/bash
 
+# Retrieves the cluster status from the first available Akka Management port.
+
 nodeStatus() {
   node=$1
   port="855"$node

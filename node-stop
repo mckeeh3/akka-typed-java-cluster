@@ -1,6 +1,7 @@
 #!/bin/bash
 
 # Use this script to stop one or more Akka cluster nodes. The command line parameters must be from 1 to 9.
+# pkill and kill SIGTERM always did hard kill -9 (SIGKILL) process terminations so switched to Akka Management via curl.
 
 usage() {
   echo "Usage: $0 nodes - Stop cluster nodes, node numbers must be 1 through 9." ; exit 1
@@ -8,12 +9,33 @@ usage() {
 
 stopNode() {
   node=$1
+  if [[ $OSTYPE == "cygwin"* ]]; then
+    for i in $(seq 9) ; do stopNodeCygwin "$i" "$node" ; done
+  else
+    stopNodeLinux $node
+  fi
+}
+
+stopNodeLinux() {
+  node=$1
   port="255"$node
   echo "Stop node $1 on port $port"
   if hash pkill 2>/dev/null; then
     pkill -f "$(basename "$jarFilename") $port"
   else
     echo "Error: pkill command required. For cygwin please intatll the procps-ng package."
+  fi
+}
+
+stopNodeCygwin() {
+  port="855"$1
+  node=$2
+
+  httpStatus=$(curl --write-out %{http_code} --silent --output /dev/null http://localhost:"$port"/cluster/members)
+
+  if [[ $httpStatus == 200 ]] ; then
+    curl --silent -X DELETE http://localhost:"$port"/cluster/members/cluster@127.0.0.1:255"$node" --output /dev/null
+    exit
   fi
 }
 
