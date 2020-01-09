@@ -19,7 +19,8 @@ stopNode() {
 stopNodeLinux() {
   node=$1
   port="255"$node
-  echo "Stop node $1 on port $port"
+  echo "Stop node $node on port $port"
+
   if hash pkill 2>/dev/null; then
     pkill -f "$(basename "$jarFilename") $port"
   else
@@ -30,6 +31,7 @@ stopNodeLinux() {
 stopNodeCygwin() {
   port="855"$1
   node=$2
+  echo "Stop node $node on port $port"
 
   httpStatus=$(curl --write-out %{http_code} --silent --output /dev/null http://localhost:"$port"/cluster/members)
 
