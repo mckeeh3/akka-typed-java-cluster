@@ -10,9 +10,9 @@ usage() {
 stopNode() {
   node=$1
   if [[ $OSTYPE == "cygwin"* ]]; then
-    for i in $(seq 9) ; do stopNodeCygwin "$i" "$node" ; done
+    stopNodeCygwin "$node"
   else
-    stopNodeLinux $node
+    stopNodeLinux "$node"
   fi
 }
 
@@ -29,8 +29,8 @@ stopNodeLinux() {
 }
 
 stopNodeCygwin() {
-  mgmtPort="855"$1
-  node=$2
+  node=$1
+  mgmtPort="855"$node
   nodePort="255"$node
 
   httpStatus=$(curl --write-out %{http_code} --max-time 5 --silent --output /dev/null http://localhost:"$mgmtPort"/cluster/members)
@@ -38,7 +38,6 @@ stopNodeCygwin() {
   if [[ $httpStatus == 200 ]] ; then
     echo "Stop node $node on port $nodePort via Akka management port $mgmtPort"
     curl --silent -X DELETE http://localhost:"$mgmtPort"/cluster/members/cluster@127.0.0.1:"$nodePort" --output /dev/null
-    exit
   fi
 }
 
