@@ -6,4 +6,6 @@ scriptPath=$(dirname "$0")
 jarFilename=$(find "$scriptPath"/target -name '*allinone.jar*')
 
 echo "Stop all cluster nodes running on ports 2551 through 2559"
-pkill -f "$(basename "$jarFilename")"
+
+scriptPath=$(dirname "$0")
+"$scriptPath"/node-stop 1 2 3 4 5 6 7 8 9
