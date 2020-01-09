@@ -29,14 +29,15 @@ stopNodeLinux() {
 }
 
 stopNodeCygwin() {
-  port="855"$1
+  mgmtPort="855"$1
   node=$2
-  echo "Stop node $node on port $port"
+  nodePort="255"$node
 
-  httpStatus=$(curl --write-out %{http_code} --silent --output /dev/null http://localhost:"$port"/cluster/members)
+  httpStatus=$(curl --write-out %{http_code} --silent --output /dev/null http://localhost:"$mgmtPort"/cluster/members)
 
   if [[ $httpStatus == 200 ]] ; then
-    curl --silent -X DELETE http://localhost:"$port"/cluster/members/cluster@127.0.0.1:255"$node" --output /dev/null
+    echo "Stop node $node on port $nodePort via Akka management port $mgmtPort"
+    curl --silent -X DELETE http://localhost:"$mgmtPort"/cluster/members/cluster@127.0.0.1:"$nodePort" --output /dev/null
     exit
   fi
 }
