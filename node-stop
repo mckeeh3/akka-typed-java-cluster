@@ -33,7 +33,7 @@ stopNodeCygwin() {
   node=$2
   nodePort="255"$node
 
-  httpStatus=$(curl --write-out %{http_code} --silent --output /dev/null http://localhost:"$mgmtPort"/cluster/members)
+  httpStatus=$(curl --write-out %{http_code} --max-time 5 --silent --output /dev/null http://localhost:"$mgmtPort"/cluster/members)
 
   if [[ $httpStatus == 200 ]] ; then
     echo "Stop node $node on port $nodePort via Akka management port $mgmtPort"
