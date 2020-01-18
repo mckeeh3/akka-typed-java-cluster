@@ -1,9 +1,23 @@
 #!/bin/bash
 
 # Use this script to down one or more Akka cluster nodes. The command line parameters must be from 1 to 9.
+# Nodes are downed via a management node. The management node defaults to 1. The management node can be
+# changed using the via option - options -v or --via.
+
+# Example - from management node 2, down node 5.
+# ./akka node down 2 5
+
+# Example - from default management node 1, down nodes 6 8 9.
+# ./akka node down 6 8 9
+
+# Example - from management node 6, down node 6.
+# ./akka node down --via 6 6
+
+# Example - from default management node 1, down nodes 6 8 9. And node 6 8 9 down themselves.
+# ./akka node down 6 8 9 -v 6 6 -v 8 8 -v 9 9
 
 usage() {
-  echo "Usage: $0 nodes - Down cluster nodes, node numbers must be 1 through 9." ; exit 1
+  echo "Usage: $0 [-v|--via M] N... - Down cluster nodes N... via mgmt node M, 6 8 9 -v 6 6 -v 8 8 -v 9 9. M default is 1." ; exit 1
 }
 
 downNode() {
@@ -16,20 +30,31 @@ downNode() {
   if [[ $httpStatus == 200 ]] ; then
     echo "Down node $node on port $nodePort via Akka management port $mgmtPort"
     curl --silent -X PUT -F "operation=Down" http://localhost:"$mgmtPort"/cluster/members/cluster@127.0.0.1:"$nodePort" --output /dev/null
-    exit
+  else
+    echo "Management port $mgmtPort, HTTP response $httpStatus"
   fi
 }
 
 [ $# -eq 0 ] && usage
 
-while [[ $# -gt 0 ]]; do
-  node=$1
-  shift
+via=1
 
-  if [[ $node =~ ^[1-9]$ ]] ; then
-    for i in $(seq 9) ; do downNode "$i" "$node" ; done
-  else
-    echo "Cluster node number $node is invalid. The node number must be 1 through 9."
-    usage
-  fi
+while [[ $# -gt 0 ]]; do
+    arg=$1
+    shift
+    if [ "$arg" = "-v" ] || [ "$arg" = "--via" ]; then
+        v=$1
+        shift
+        if [[ $v =~ ^[1-9]$ ]] ; then
+            via=$v
+        else
+            echo "Via node number '$v' invalid. Must be 1-9."
+            usage
+        fi
+    elif [[ $arg =~ ^[1-9]$ ]] ; then
+        downNode "$via" "$arg"
+    else
+        echo "Argument '$arg' is invalid."
+        usage
+    fi
 done
