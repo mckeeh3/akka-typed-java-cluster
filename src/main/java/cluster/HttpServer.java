@@ -28,10 +28,10 @@ import java.util.stream.StreamSupport;
 
 class HttpServer {
     private final int port;
-    private final ActorSystem actorSystem;
+    private final ActorSystem<Void> actorSystem;
     private final ActorMaterializer actorMaterializer;
 
-    private HttpServer(int port, ActorSystem actorSystem) {
+    private HttpServer(int port, ActorSystem<Void> actorSystem) {
         this.port = port;
         this.actorSystem = actorSystem;
 
@@ -40,10 +40,10 @@ class HttpServer {
         startHttpServer();
     }
 
-    static void start(ActorSystem actorSystem) {
+    static void start(ActorSystem<Void> actorSystem) {
         Option<Object> portOption = Cluster.get(actorSystem).selfMember().address().port();
         if (portOption.isDefined()) {
-            Integer port = Integer.valueOf(portOption.get().toString());
+            int port = Integer.parseInt(portOption.get().toString());
             if (port >= 2551 && port <= 2559) {
                 new HttpServer(port + 7000, actorSystem);
             }
@@ -135,7 +135,7 @@ class HttpServer {
         }
     }
 
-    private static Nodes loadNodes(ActorSystem actorSystem) {
+    private static Nodes loadNodes(ActorSystem<Void> actorSystem) {
         final Cluster cluster = Cluster.get(actorSystem);
 
         ClusterEvent.CurrentClusterState clusterState = cluster.state();
@@ -198,7 +198,7 @@ class HttpServer {
         return 0;
     }
 
-    private static List<Integer> seedNodePorts(ActorSystem actorSystem) {
+    private static List<Integer> seedNodePorts(ActorSystem<Void> actorSystem) {
         return actorSystem.settings().config().getList("akka.cluster.seed-nodes")
                 .stream().map(s -> s.unwrapped().toString())
                 .map(s -> {
@@ -230,12 +230,8 @@ class HttpServer {
             final int port = memberPort(member);
             if (isValidPort(port)) {
                 Node node = new Node(port, "unreachable", "unreachable", false, false, false);
-                if (nodes.contains(node)) {
-                    nodes.remove(node);
-                    nodes.add(node);
-                } else {
-                    nodes.add(node);
-                }
+                nodes.remove(node);
+                nodes.add(node);
             }
         }
 
