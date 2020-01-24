@@ -314,7 +314,7 @@ function requestClusterState() {
 function requestClusterStateInterval() {
     //console.log(timeNow(), "interval");
 
-    clusterStateScanAllForDeadNodes();
+    clusterStateScanAllForOfflineNodes();
 
     for (var port = 9551; port <= 9559; port++) {
         requestClusterStateFromNode(port);
@@ -337,20 +337,20 @@ function clusterStateNodeReset(nodes) {
     }
 }
 
-function clusterStateScanForDeadNodes(nodes) {
+function clusterStateScanForOfflineNodes(nodes) {
     const time = (new Date()).getTime();
 
     for (var n = 0; n < 9; n++) {
-        if (time - nodes[n].time > 3000) { // node is dead if no update for over 3 seconds
+        if (time - nodes[n].time > 3000) { // node is offline if no update for over 3 seconds
             nodes[n] = clusterStateNodeInit(n + 2551);
         }
     }
 }
 
-function clusterStateScanAllForDeadNodes() {
-    clusterStateScanForDeadNodes(clusterState.summary.nodes);
+function clusterStateScanAllForOfflineNodes() {
+    clusterStateScanForOfflineNodes(clusterState.summary.nodes);
     for (var m = 0; m < 9; m++) {
-        clusterStateScanForDeadNodes(clusterState.members[m].nodes);
+        clusterStateScanForOfflineNodes(clusterState.members[m].nodes);
     }
 }
 
