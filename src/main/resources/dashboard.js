@@ -169,8 +169,9 @@ function nodeDetails(x, y, w, h, nodeNo) {
     }
 
     if (node.seedNode) {
-        Label().setX(x).setY(y + h - 1).setW(w).setH(1)
-                .setBorder(0.15)
+        const border = 0.25
+        Label().setX(x + 3 - border).setY(y + 0.3).setW(w).setH(1)
+                .setBorder(border)
                 .setKey("seed node")
                 .setKeyColor(color(255, 128, 0))
                 .draw();
