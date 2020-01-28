@@ -13,7 +13,7 @@ unblock() {
   elif hash iptables 2>/dev/null; then
     iptables -F
   else
-    echo "Not supported on this OS. OSX and Linux currently supported."
+    echo "This command is currently only available on OSX or Linux systems."
   fi
 }
 
