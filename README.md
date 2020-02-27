@@ -325,3 +325,13 @@ The `./akka cluster status` command displays the status of a currently running c
 [Akka Management](https://developer.lightbend.com/docs/akka-management/current/index.html)
 extension
 [Cluster Http Management](https://developer.lightbend.com/docs/akka-management/current/cluster-http-management.html).
+
+### The Cluster Dashboard ###
+
+TODO
+
+![Dashboard 1](docs/images/akka-typed-java-cluster-dashboard-01.png)
+
+TODO
+
+![Dashboard 2](docs/images/akka-typed-java-cluster-dashboard-02.png)
