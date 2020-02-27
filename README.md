@@ -37,10 +37,12 @@ Akka actors communicate with each other via asynchronous messages. Akka actors s
 
 ### The ClusterListenerActor Actor
 
+TODO ===========================
+
 Akka actors are implemented in Java or Scala. You create actors as Java or Scala classes. There are two ways to implement actors, either untyped and typed. Untyped actors are used in this Akka Java cluster example project series.
 
 The Akka documentation section about
-[Actors](https://doc.akka.io/docs/akka/current/actors.html#actors)
+[Actors](https://doc.akka.io/docs/akka/current/typed/actors.html)
 is a good starting point for those of you that are interested in diving into the details of how actors work and how they are implemented.
 
 The first actor we will look at is named ClusterListenerActor. This actor is set up to receive messages about cluster events.  As nodes join and leave the cluster, this actor receives messages about these events. Theses received messages are then written to a logger.
@@ -48,88 +50,90 @@ The first actor we will look at is named ClusterListenerActor. This actor is set
 The ClusterListenerActor provides a simple view of cluster activity.
 Here is an example of the log output:
 ~~~
-03:20:29.569 INFO  cluster-akka.actor.default-dispatcher-4 akka.tcp://cluster@127.0.0.1:2551/user/clusterListener - MemberUp(Member(address = akka.tcp://cluster@127.0.0.1:2553, status = Up)) sent to Member(address = akka.tcp://cluster@127.0.0.1:2551, status = Up)
-03:20:29.570 INFO  cluster-akka.actor.default-dispatcher-4 akka.tcp://cluster@127.0.0.1:2551/user/clusterListener - 1 (LEADER) (OLDEST) Member(address = akka.tcp://cluster@127.0.0.1:2551, status = Up)
-03:20:29.570 INFO  cluster-akka.actor.default-dispatcher-4 akka.tcp://cluster@127.0.0.1:2551/user/clusterListener - 2 Member(address = akka.tcp://cluster@127.0.0.1:2552, status = Up)
-03:20:29.570 INFO  cluster-akka.actor.default-dispatcher-4 akka.tcp://cluster@127.0.0.1:2551/user/clusterListener - 3 Member(address = akka.tcp://cluster@127.0.0.1:2553, status = Joining)
+15:22:08.580 INFO    - ClusterListenerActor - ReachabilityChanged() sent to Member(address = akka://cluster@127.0.0.1:2551, status = Up)
+15:22:08.581 INFO    - ClusterListenerActor - 1 (LEADER) (OLDEST) Member(address = akka://cluster@127.0.0.1:2551, status = Up)
+15:22:08.581 INFO    - ClusterListenerActor - 2 Member(address = akka://cluster@127.0.0.1:2552, status = Joining)
+15:22:08.581 INFO    - ClusterListenerActor - 3 Member(address = akka://cluster@127.0.0.1:2553, status = Up)
+15:22:08.581 INFO    - ClusterListenerActor - 4 Member(address = akka://cluster@127.0.0.1:2554, status = Joining)
+15:22:08.581 INFO    - ClusterListenerActor - 5 Member(address = akka://cluster@127.0.0.1:2555, status = Up)
+15:22:08.581 INFO    - ClusterListenerActor - 6 Member(address = akka://cluster@127.0.0.1:2556, status = Joining)
+15:22:08.581 INFO    - ClusterListenerActor - 7 Member(address = akka://cluster@127.0.0.1:2557, status = Up)
+15:22:08.581 INFO    - ClusterListenerActor - 8 Member(address = akka://cluster@127.0.0.1:2558, status = Up)
+15:22:08.581 INFO    - ClusterListenerActor - 9 Member(address = akka://cluster@127.0.0.1:2559, status = Up)
 ~~~
+A cluster event message triggered the above log output. This actor logs the event message, and it lists the current state of each of the members in the cluster.  Note that this log output shows that this is currently a cluster of nine nodes. Some of the nodes are in the "up" state. Some nodes are in the "joining" state.  The
+[Cluster Membership Service](https://doc.akka.io/docs/akka/current/typed/cluster-membership.html#cluster-membership-service)
+Akka documentation is an excellent place to start to get a better understanding of the mechanics of nodes and how they form themselves into a cluster.
 
-Let's start with the full ClusterListenerActor source file. Note that this actor is implemented as a single Java class that extends an Akka based class.
+The following is the full ClusterListenerActor source file. Note that this actor is implemented as a single Java class that extends an Akka based class.
 
 ~~~java
 package cluster;
 
-import akka.actor.AbstractLoggingActor;
-import akka.actor.Cancellable;
-import akka.actor.Props;
-import akka.cluster.Cluster;
+import akka.actor.typed.Behavior;
+import akka.actor.typed.javadsl.AbstractBehavior;
+import akka.actor.typed.javadsl.ActorContext;
+import akka.actor.typed.javadsl.Behaviors;
+import akka.actor.typed.javadsl.Receive;
 import akka.cluster.ClusterEvent;
-import akka.cluster.ClusterEvent.CurrentClusterState;
 import akka.cluster.Member;
+import akka.cluster.typed.Cluster;
+import akka.cluster.typed.Subscribe;
+import org.slf4j.Logger;
 
-import java.time.Duration;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.Consumer;
 import java.util.stream.StreamSupport;
 
-class ClusterListenerActor extends AbstractLoggingActor {
-    private final Cluster cluster = Cluster.get(context().system());
-    private Cancellable showClusterStateCancelable;
+class ClusterListenerActor extends AbstractBehavior<ClusterEvent.ClusterDomainEvent> {
+    private final Cluster cluster;
+    private final Logger log;
+
+    static Behavior<ClusterEvent.ClusterDomainEvent> create() {
+        return Behaviors.setup(ClusterListenerActor::new);
+    }
+
+    private ClusterListenerActor(ActorContext<ClusterEvent.ClusterDomainEvent> context) {
+        super(context);
+
+        this.cluster = Cluster.get(context.getSystem());
+        this.log = context.getLog();
+
+        subscribeToClusterEvents();
+    }
+
+    private void subscribeToClusterEvents() {
+        Cluster.get(getContext().getSystem())
+                .subscriptions()
+                .tell(Subscribe.create(getContext().getSelf(), ClusterEvent.ClusterDomainEvent.class));
+    }
 
     @Override
-    public Receive createReceive() {
-        return receiveBuilder()
-                .match(ShowClusterState.class, this::showClusterState)
-                .matchAny(this::logClusterEvent)
+    public Receive<ClusterEvent.ClusterDomainEvent> createReceive() {
+        return newReceiveBuilder()
+                .onAnyMessage(this::logClusterEvent)
                 .build();
     }
 
-    private void showClusterState(ShowClusterState showClusterState) {
-        log().info("{} sent to {}", showClusterState, cluster.selfMember());
-        logClusterMembers(cluster.state());
-        showClusterStateCancelable = null;
-    }
-
-    private void logClusterEvent(Object clusterEventMessage) {
-        log().info("{} sent to {}", clusterEventMessage, cluster.selfMember());
+    private Behavior<ClusterEvent.ClusterDomainEvent> logClusterEvent(Object clusterEventMessage) {
+        log.info("{} - {} sent to {}", getClass().getSimpleName(), clusterEventMessage, cluster.selfMember());
         logClusterMembers();
-    }
 
-    @Override
-    public void preStart() {
-        log().debug("Start");
-        cluster.subscribe(self(), ClusterEvent.initialStateAsEvents(),
-                ClusterEvent.ClusterDomainEvent.class);
-    }
-
-    @Override
-    public void postStop() {
-        log().debug("Stop");
-        cluster.unsubscribe(self());
-    }
-
-    static Props props() {
-        return Props.create(ClusterListenerActor.class);
+        return Behaviors.same();
     }
 
     private void logClusterMembers() {
         logClusterMembers(cluster.state());
-
-        if (showClusterStateCancelable == null) {
-            showClusterStateCancelable = context().system().scheduler().scheduleOnce(
-                    Duration.ofSeconds(15),
-                    self(),
-                    new ShowClusterState(),
-                    context().system().dispatcher(),
-                    null);
-        }
     }
 
-    private void logClusterMembers(CurrentClusterState currentClusterState) {
-        Optional<Member> old = StreamSupport.stream(currentClusterState.getMembers().spliterator(), false)
+    private void logClusterMembers(ClusterEvent.CurrentClusterState currentClusterState) {
+        final Optional<Member> old = StreamSupport.stream(currentClusterState.getMembers().spliterator(), false)
                 .reduce((older, member) -> older.isOlderThan(member) ? older : member);
 
-        Member oldest = old.orElse(cluster.selfMember());
+        final Member oldest = old.orElse(cluster.selfMember());
+        final Set<Member> unreachable = currentClusterState.getUnreachable();
+        final String className = getClass().getSimpleName();
 
         StreamSupport.stream(currentClusterState.getMembers().spliterator(), false)
                 .forEach(new Consumer<Member>() {
@@ -137,7 +141,7 @@ class ClusterListenerActor extends AbstractLoggingActor {
 
                     @Override
                     public void accept(Member member) {
-                        log().info("{} {}{}{}", ++m, leader(member), oldest(member), member);
+                        log.info("{} - {} {}{}{}{}", className, ++m, leader(member), oldest(member), unreachable(member), member);
                     }
 
                     private String leader(Member member) {
@@ -147,28 +151,36 @@ class ClusterListenerActor extends AbstractLoggingActor {
                     private String oldest(Member member) {
                         return oldest.equals(member) ? "(OLDEST) " : "";
                     }
-                });
-    }
 
-    private static class ShowClusterState {
-        @Override
-        public String toString() {
-            return ShowClusterState.class.getSimpleName();
-        }
+                    private String unreachable(Member member) {
+                        return unreachable.contains(member) ? "(UNREACHABLE) " : "";
+                    }
+                });
+
+        currentClusterState.getUnreachable()
+                .forEach(new Consumer<Member>() {
+                    int m = 0;
+
+                    @Override
+                    public void accept(Member member) {
+                        log.info("{} - {} {} (unreachable)", getClass().getSimpleName(), ++m, member);
+                    }
+                });
     }
 }
 ~~~
 
-This class is an example of a simple actor implementation. However, what is somewhat unique about this actor is that it subscribes to the Akka system to receive cluster event messages. Please see the Akka documentation
-[Subscribe to Cluster Events](https://doc.akka.io/docs/akka/current/cluster-usage.html#subscribe-to-cluster-events)
+This class is an example of a simple
+[object-oriented style](https://doc.akka.io/docs/akka/current/typed/style-guide.html#style-guide)
+actor implementation. However, what is somewhat unique about this actor is that it subscribes to the Akka system to receive cluster event messages. Please see the Akka documentation
+[Subscribe to Cluster Events](https://doc.akka.io/docs/akka/current/typed/cluster.html#cluster-subscriptions)
 for details. Here is the code that subscribes to cluster events.
 
 ~~~java
-@Override
-public void preStart() {
-    log().debug("Start");
-    cluster.subscribe(self(), ClusterEvent.initialStateAsEvents(),
-            ClusterEvent.ClusterDomainEvent.class);
+private void subscribeToClusterEvents() {
+    Cluster.get(getContext().getSystem())
+            .subscriptions()
+            .tell(Subscribe.create(getContext().getSelf(), ClusterEvent.ClusterDomainEvent.class));
 }
 ~~~
 
@@ -176,10 +188,9 @@ The actor is set up to receive cluster event messages. As these messages arrive 
 
 ~~~java
 @Override
-public Receive createReceive() {
-    return receiveBuilder()
-            .match(ShowClusterState.class, this::showClusterState)
-            .matchAny(this::logClusterEvent)
+public Receive<ClusterEvent.ClusterDomainEvent> createReceive() {
+    return newReceiveBuilder()
+            .onAnyMessage(this::logClusterEvent)
             .build();
 }
 ~~~
@@ -188,7 +199,7 @@ As each node in the cluster starts up an instance of the ClusterListenerActor is
 
 ### How it works
 
-In this project, we are going to start with a basic template for an Akka, Java, and Maven based example that has the code and configuration for running an Akka Cluster. The Maven POM file uses two plugins, one for running the code using the `mvn:exec` command, and the other plugin builds a self contained JAR file for running the code using the `java -jar` command.
+In this project, we are going to start with a basic template for an Akka, Java, and Maven based example that has the code and configuration for running an Akka Cluster. The Maven POM file uses a plugin that builds a self contained JAR file for running the code using the `java -jar` command.
 
 When the project code is executed the action starts in the `Runner` class `main` method.
 
@@ -209,15 +220,9 @@ private static void startupClusterNodes(List<String> ports) {
     System.out.printf("Start cluster on port(s) %s%n", ports);
 
     ports.forEach(port -> {
-        ActorSystem actorSystem = ActorSystem.create("cluster", setupClusterNodeConfig(port));
-
-        AkkaManagement.get(actorSystem).start();
-
-        actorSystem.actorOf(ClusterListenerActor.props(), "clusterListener");
-
-        addCoordinatedShutdownTask(actorSystem, CoordinatedShutdown.PhaseClusterShutdown());
-
-        actorSystem.log().info("Akka node {}", actorSystem.provider().getDefaultAddress());
+        ActorSystem<Void> actorSystem = ActorSystem.create(Main.create(), "cluster", setupClusterNodeConfig(port));
+        AkkaManagement.get(actorSystem.classicSystem()).start();
+        HttpServer.start(actorSystem);
     });
 }
 ~~~
@@ -225,10 +230,11 @@ private static void startupClusterNodes(List<String> ports) {
 The `startupClusterNodes` methods loops through the list of ports. An actor system is created for each port.
 
 ~~~java
-ActorSystem actorSystem = ActorSystem.create("cluster", setupClusterNodeConfig(port));
+ActorSystem<Void> actorSystem = ActorSystem.create(Main.create(), "cluster", setupClusterNodeConfig(port));
 ~~~
 
-A lot happens when an actor system is created. Many of the details that determine how to run the actor system are defined via configuration settings. This project includes an `application.conf` configuration file, which is located in the `src/main/resources` directory. One of the most critical configuration settings defines the actor system host and port. When an actor system runs in a cluster, the configuration also defines how each node will locate and join the cluster. In this project, nodes join the cluster using what are called seed nodes.
+A lot happens when an actor system is created. Many of the details that determine how to run the actor system are defined via configuration settings. This project includes an `application.conf` configuration file, which is located in the `src/main/resources` directory. One of the most critical configuration settings defines the actor system host and port. When an actor system runs in a cluster, the configuration also defines how each node will locate and join the cluster. In this project, nodes join the cluster using what are called
+[seed nodes](https://doc.akka.io/docs/akka/current/typed/cluster.html#joining-configured-seed-nodes).
 
 ~~~properties
 cluster {
@@ -259,7 +265,7 @@ Of course, the most common scenario is that each actor system is created in diff
 Let's get back to that one line of code where an actor system is created.
 
 ~~~java
-ActorSystem actorSystem = ActorSystem.create("cluster", setupClusterNodeConfig(port));
+ActorSystem<Void> actorSystem = ActorSystem.create(Main.create(), "cluster", setupClusterNodeConfig(port));
 ~~~
 
 From this brief description, you can see that a lot happens within the actor system abstraction layer and this summary of the startup process is just the tip of the iceberg, this is what abstraction layers are supposed to do, they hide complexity.
@@ -280,7 +286,7 @@ mvn clean package
 
 The Maven command builds the project and creates a self contained runnable JAR.
 
-### Run a cluster (Mac, Linux)
+### Run a cluster (Mac, Linux, Cygwin)
 
 The project contains a set of scripts that can be used to start and stop individual cluster nodes or start and stop a cluster of nodes.
 
@@ -319,56 +325,3 @@ The `./akka cluster status` command displays the status of a currently running c
 [Akka Management](https://developer.lightbend.com/docs/akka-management/current/index.html)
 extension
 [Cluster Http Management](https://developer.lightbend.com/docs/akka-management/current/cluster-http-management.html).
-
-### Run a cluster (Windows, command line)
-
-The following Maven command runs a signle JVM with 3 Akka actor systems on ports 2551, 2552, and a radmonly selected port.
-~~~bash
-mvn exec:java
-~~~
-Use CTRL-C to stop.
-
-To run on specific ports use the following `-D` option for passing in command line arguements.
-~~~bash
-mvn exec:java -Dexec.args="2551"
-~~~
-The default no arguments is equilevalant to the following.
-~~~bash
-mvn exec:java -Dexec.args="2551 2552 0"
-~~~
-A common way to run tests is to start single JVMs in multiple command windows. This simulates running a multi-node Akka cluster.
-For example, run the following 4 commands in 4 command windows.
-~~~bash
-mvn exec:java -Dexec.args="2551" > /tmp/$(basename $PWD)-1.log
-~~~
-~~~bash
-mvn exec:java -Dexec.args="2552" > /tmp/$(basename $PWD)-2.log
-~~~
-~~~bash
-mvn exec:java -Dexec.args="0" > /tmp/$(basename $PWD)-3.log
-~~~
-~~~bash
-mvn exec:java -Dexec.args="0" > /tmp/$(basename $PWD)-4.log
-~~~
-This runs a 4 node Akka cluster starting 2 nodes on ports 2551 and 2552, which are the cluster seed nodes as configured and the `application.conf` file.
-And 2 nodes on randomly selected port numbers.
-The optional redirect `> /tmp/$(basename $PWD)-4.log` is an example for pushing the log output to filenames based on the project direcctory name.
-
-For convenience, in a Linux command shell define the following aliases.
-
-~~~bash
-alias p1='cd ~/akka-java/akka-typed-java-cluster'
-alias p2='cd ~/akka-java/akka-typed-java-cluster-aware'
-alias p3='cd ~/akka-java/akka-typed-java-cluster-singleton'
-alias p4='cd ~/akka-java/akka-typed-java-cluster-sharding'
-alias p5='cd ~/akka-java/akka-typed-java-cluster-persistence'
-alias p6='cd ~/akka-java/akka-typed-java-cluster-persistence-query'
-
-alias m1='clear ; mvn exec:java -Dexec.args="2551" > /tmp/$(basename $PWD)-1.log'
-alias m2='clear ; mvn exec:java -Dexec.args="2552" > /tmp/$(basename $PWD)-2.log'
-alias m3='clear ; mvn exec:java -Dexec.args="0" > /tmp/$(basename $PWD)-3.log'
-alias m4='clear ; mvn exec:java -Dexec.args="0" > /tmp/$(basename $PWD)-4.log'
-~~~
-
-The p1-6 alias commands are shortcuts for cd'ing into one of the six project directories.
-The m1-4 alias commands start and Akka node with the appropriate port. Stdout is also redirected to the /tmp directory.

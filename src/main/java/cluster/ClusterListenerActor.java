@@ -8,6 +8,7 @@ import akka.actor.typed.javadsl.Receive;
 import akka.cluster.ClusterEvent;
 import akka.cluster.Member;
 import akka.cluster.typed.Cluster;
+import akka.cluster.typed.Subscribe;
 import org.slf4j.Logger;
 
 import java.util.Optional;
@@ -28,6 +29,14 @@ class ClusterListenerActor extends AbstractBehavior<ClusterEvent.ClusterDomainEv
 
         this.cluster = Cluster.get(context.getSystem());
         this.log = context.getLog();
+
+        subscribeToClusterEvents();
+    }
+
+    private void subscribeToClusterEvents() {
+        Cluster.get(getContext().getSystem())
+                .subscriptions()
+                .tell(Subscribe.create(getContext().getSelf(), ClusterEvent.ClusterDomainEvent.class));
     }
 
     @Override
