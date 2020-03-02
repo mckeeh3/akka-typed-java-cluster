@@ -280,16 +280,16 @@ From this brief description, you can see that a lot happens within the actor sys
 
 Once multiple actor systems form a cluster, they form a single virtual actor system from the perspective of actors running within this virtual actor system.  Of course, individual actor instances physically reside in specific cluster nodes within specific JVMs but when it comes to receiving and sending actor messages the node boundaries are transparent and virtually disappear. It is this transparency that is the foundation for building "*one application or service spans multiple nodes*."
 
-Also, the flexibility to expand a cluster by adding more nodes is the mechanism for eliminating single points of failure and bottlenecks. When the existing nodes in a cluster cannot handle the current load, more nodes can be added to expand the capacity. The same is true for failures. The loss of one or more nodes does not mean that the entire cluster fails. The failed node can be replaced, and actors that were running on failed nodes can be relocated to other nodes.
+Also, the flexibility to expand a cluster by adding more nodes is the mechanism for eliminating single points of failure and bottlenecks. When the existing nodes in a cluster cannot handle the current load, more nodes can be added to expand the capacity. The same is true for failures. The loss of one or more nodes does not mean that the entire cluster fails. Failed nodes can be replaced, and actors that were running on the failed nodes can be relocated to other nodes.
 
 Hopefully, this overview has shed some light on how Akka provides "*no single point of failure or single point of bottleneck*" and how "*Akka cluster allows for building distributed applications, where one application or service spans multiple nodes.*"
 
 ### Installation
 
 ~~~bash
-git clone https://github.com/mckeeh3/akka-typed-java-cluster.git
-cd akka-typed-java-cluster
-mvn clean package
+$ git clone https://github.com/mckeeh3/akka-typed-java-cluster.git
+$ cd akka-typed-java-cluster
+$ mvn clean package
 ~~~
 
 The Maven command builds the project and creates a self contained runnable JAR.
@@ -302,6 +302,9 @@ The main script `./akka` is provided to run a cluster of nodes or start and stop
 
 ~~~bash
 $ ./akka
+~~~
+Run the akka script with no parameters to see the available options.
+~~~
 This CLI is used to start, stop and view the dashboard nodes in an Akka cluster.
 
 These commands manage the Akka cluster as defined in this project. A cluster
@@ -336,7 +339,7 @@ Net commands are used to block and unblock network access to cluster nodes.
 ~~~
 
 The `cluster` and `node` start options will start Akka nodes on ports 2551 through 2559.
-Both `stdin` and `stderr` output is sent to a file in the `/tmp` directory using the file naming convention `/tmp/<project-dir-name>-N.log`.
+Both `stdin` and `stderr` output is sent to a log files in the `/tmp` directory using the file naming convention `/tmp/<project-dir-name>-N.log`.
 
 Start a cluster of nine nodes running on ports 2551 to 2559.
 ~~~bash
@@ -403,11 +406,6 @@ Again, stop all currently running cluster nodes.
 $ ./akka cluster stop
 ~~~
 
-You can use the `./akka cluster start [1-9]` script to start multiple nodes and then use `./akka node start [1-9]` and `./akka node stop [1-9]`
-to start and stop individual nodes.
-
-Use the `./akka node tail [1-9]` command to `tail -f` a log file for nodes 1 through 9.
-
 The `./akka cluster status` command displays the status of a currently running cluster in JSON format using the
 [Akka Management](https://developer.lightbend.com/docs/akka-management/current/index.html)
 extension
@@ -424,7 +422,7 @@ $ mvn clean package
 $ ./akka cluster start
 $ ./akka cluster dashboard
 ~~~
-Follow the steps above to download, build, run, and bring up a dashboard.
+Follow the steps above to download, build, run, and bring up a dashboard in your default web browser.
 
 ![Dashboard 1](docs/images/akka-typed-java-cluster-dashboard-01.png)
 
