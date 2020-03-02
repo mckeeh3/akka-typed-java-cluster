@@ -37,12 +37,14 @@ Akka actors communicate with each other via asynchronous messages. Akka actors s
 
 ### The ClusterListenerActor Actor
 
-TODO ===========================
-
-Akka actors are implemented in Java or Scala. You create actors as Java or Scala classes. There are two ways to implement actors, either untyped and typed. Untyped actors are used in this Akka Java cluster example project series.
+Akka actors are implemented in Java or Scala. You create actors as Java or Scala classes. There are two ways to implement actors, either
+[typed](https://doc.akka.io/docs/akka/current/typed/actors.html)
+or
+[classic](https://doc.akka.io/docs/akka/current/actors.html).
+Typed actors are used in this Akka Java cluster example project series.
 
 The Akka documentation section about
-[Actors](https://doc.akka.io/docs/akka/current/typed/actors.html)
+[Actors](https://doc.akka.io/docs/akka/current/general/actors.html)
 is a good starting point for those of you that are interested in diving into the details of how actors work and how they are implemented.
 
 The first actor we will look at is named ClusterListenerActor. This actor is set up to receive messages about cluster events.  As nodes join and leave the cluster, this actor receives messages about these events. Theses received messages are then written to a logger.
@@ -66,6 +68,12 @@ A cluster event message triggered the above log output. This actor logs the even
 Akka documentation is an excellent place to start to get a better understanding of the mechanics of nodes and how they form themselves into a cluster.
 
 The following is the full ClusterListenerActor source file. Note that this actor is implemented as a single Java class that extends an Akka based class.
+Akka typed actors use either an
+[object-oriented style](https://doc.akka.io/docs/akka/current/typed/actors.html#object-oriented-style)
+or
+[functional style](https://doc.akka.io/docs/akka/current/typed/actors.html#functional-style).
+This Cluster Listener Actor is an example of an object-oriented actor implementation.
+
 
 ~~~java
 package cluster;
@@ -250,7 +258,7 @@ As each actor system is created on a specific port, it looks at the seed node co
 
 Here is an example startup scenario using the default ports 2551, 2552, and 0. An actor system is created on port 2551; looking at the configuration it knows that it is a seed node. The seed node actor system on port 2551 attempts to contact the actor system on port 2552, the other seed node. When the actor system on port 2552 is created it goes through the same process, in this case, 2552 attempts to contact and join with 2551. When the third actor systems is created on a random port, say port 24242, it knows from the configuration that it is not a seed node, in this case, it attempts to communicate with one of the seed actor systems, announce itself, and join the cluster.
 
-You may have noticed that in the above example three actor systems were created in a single JVM. While it is acceptable to run multiple actor systems per JVM the more common case is to run a single actor system per JVM.
+You may have noticed that in the above example three actor systems were created in a single JVM. While it is acceptable to run multiple actor systems per JVM the more common use case is to run a single actor system per JVM.
 
 Let's look at a slightly more realistic example. Using the provided `akka` script a three node cluster is started.
 
@@ -270,9 +278,9 @@ ActorSystem<Void> actorSystem = ActorSystem.create(Main.create(), "cluster", set
 
 From this brief description, you can see that a lot happens within the actor system abstraction layer and this summary of the startup process is just the tip of the iceberg, this is what abstraction layers are supposed to do, they hide complexity.
 
-Once multiple actor systems join a cluster, they form a single virtual actor system from the perspective of actors running within this virtual actor system.  Of course, individual actor instances physically reside in specific cluster nodes within specific JVMs but when it comes to receiving and sending actor messages the node boundaries are transparent and virtually disappear. It is this transparency that is the foundation for building "*one application or service spans multiple nodes*."
+Once multiple actor systems form a cluster, they form a single virtual actor system from the perspective of actors running within this virtual actor system.  Of course, individual actor instances physically reside in specific cluster nodes within specific JVMs but when it comes to receiving and sending actor messages the node boundaries are transparent and virtually disappear. It is this transparency that is the foundation for building "*one application or service spans multiple nodes*."
 
-Also, the flexibility to expand a cluster by adding more nodes is the mechinism for eliminating single points of bottlenecks. When the existing nodes in a cluster cannot handle the current load, more nodes can be added to expand the capacity. The same is true for failures. The loss of one or more nodes does not mean that the entire cluster fails. The failed node can be replaced, and actors that were running on failed nodes can be relocated to other nodes.
+Also, the flexibility to expand a cluster by adding more nodes is the mechanism for eliminating single points of failure and bottlenecks. When the existing nodes in a cluster cannot handle the current load, more nodes can be added to expand the capacity. The same is true for failures. The loss of one or more nodes does not mean that the entire cluster fails. The failed node can be replaced, and actors that were running on failed nodes can be relocated to other nodes.
 
 Hopefully, this overview has shed some light on how Akka provides "*no single point of failure or single point of bottleneck*" and how "*Akka cluster allows for building distributed applications, where one application or service spans multiple nodes.*"
 
@@ -291,29 +299,108 @@ The Maven command builds the project and creates a self contained runnable JAR.
 The project contains a set of scripts that can be used to start and stop individual cluster nodes or start and stop a cluster of nodes.
 
 The main script `./akka` is provided to run a cluster of nodes or start and stop individual nodes.
-Use `./akka node start [1-9] | stop` to start and stop individual nodes and `./akka cluster start [1-9] | stop` to start and stop a cluster of nodes.
+
+~~~bash
+$ ./akka
+This CLI is used to start, stop and view the dashboard nodes in an Akka cluster.
+
+These commands manage the Akka cluster as defined in this project. A cluster
+of nodes is started using the JAR file built with the project Maven POM file.
+
+Cluster commands are used to start, stop, view status, and view the dashboard Akka cluster nodes.
+
+./akka cluster start N | stop | status | dashboard [N]
+./akka cluster start [N]      # Starts one or more cluster nodes as specified by [N] or default 9, which must be 1-9.
+./akka cluster stop           # Stops all currently cluster nodes.
+./akka cluster status         # Shows an Akka Management view of the cluster status/state.
+./akka cluster dashboard [N]  # Opens an Akka cluster dashboard web page hosted on the specified [N] or default 1, which must be 1-9.
+
+Node commands are used to start, stop, kill, down, or tail the log of cluster nodes.
+Nodes are started on port 255N and management port 855N, N is the node number 1-9.
+
+./akka node start N | stop N | kill N | down N | tail N
+./akka node start N...  # Start one or more cluster nodes for nodes 1-9.
+./akka node stop N...   # Stop one or more cluster nodes for nodes 1-9.
+./akka node kill N...   # Kill (kill -9) one or more cluster nodes for nodes 1-9.
+./akka node down N...   # Down one or more cluster nodes for nodes 1-9.
+./akka node tail N      # Tail the log file of the specified cluster node for nodes 1-9.
+
+Net commands are used to block and unblock network access to cluster nodes.
+
+./akka net block N | unblock | view | enable | disable
+./akka net block N...  # Block network access to node ports, ports 255N, nodes N 1-9.
+./akka net unblock     # Reset the network blocking rules.
+./akka net view        # View the current network blocking rules.
+./akka net enable      # Enable packet filtering, which enables blocking network access to cluster nodes. (OSX only)
+./akka net disable     # Disable packet filtering, which disables blocking network access to cluster nodes. (OSX only)
+~~~
+
 The `cluster` and `node` start options will start Akka nodes on ports 2551 through 2559.
 Both `stdin` and `stderr` output is sent to a file in the `/tmp` directory using the file naming convention `/tmp/<project-dir-name>-N.log`.
 
-Start node 1 on port 2551 and node 2 on port 2552.
+Start a cluster of nine nodes running on ports 2551 to 2559.
 ~~~bash
-./akka node start 1
-./akka node start 2
-~~~
-
-Stop node 3 on port 2553.
-~~~bash
-./akka node stop 3
-~~~
-
-Start a cluster of four nodes on ports 2551, 2552, 2553, and 2554.
-~~~bash
-./akka cluster start 4
+$ ./akka cluster start
+Starting 9 cluster nodes
+Start node 1 on port 2551, management port 8551, HTTP port 9551
+Start node 2 on port 2552, management port 8552, HTTP port 9552
+Start node 3 on port 2553, management port 8553, HTTP port 9553
+Start node 4 on port 2554, management port 8554, HTTP port 9554
+Start node 5 on port 2555, management port 8555, HTTP port 9555
+Start node 6 on port 2556, management port 8556, HTTP port 9556
+Start node 7 on port 2557, management port 8557, HTTP port 9557
+Start node 8 on port 2558, management port 8558, HTTP port 9558
+Start node 9 on port 2559, management port 8559, HTTP port 9559
 ~~~
 
 Stop all currently running cluster nodes.
 ~~~bash
-./akka cluster stop
+$ ./akka cluster stop
+Stop node 1 on port 2551
+Stop node 2 on port 2552
+Stop node 3 on port 2553
+Stop node 4 on port 2554
+Stop node 5 on port 2555
+Stop node 6 on port 2556
+Stop node 7 on port 2557
+Stop node 8 on port 2558
+Stop node 9 on port 2559
+~~~
+
+Stop node 3 on port 2553.
+~~~bash
+$ ./akka node stop 3
+Stop node 3 on port 2553
+~~~
+
+Stop nodes 5 and 7 on ports 2555 and 2557.
+~~~bash
+$ ./akka node stop 5 7
+Stop node 5 on port 2555
+Stop node 7 on port 2557
+~~~
+
+Start node 3, 5, and 7 on ports 2553, 2555 and2557.
+~~~bash
+$ ./akka node start 3 5 7
+Start node 3 on port 2553, management port 8553, HTTP port 9553
+Start node 5 on port 2555, management port 8555, HTTP port 9555
+Start node 7 on port 2557, management port 8557, HTTP port 9557
+~~~
+
+Start a cluster of four nodes on ports 2551, 2552, 2553, and 2554.
+~~~bash
+$ ./akka cluster start 4
+Starting 4 cluster nodes
+Start node 1 on port 2551, management port 8551, HTTP port 9551
+Start node 2 on port 2552, management port 8552, HTTP port 9552
+Start node 3 on port 2553, management port 8553, HTTP port 9553
+Start node 4 on port 2554, management port 8554, HTTP port 9554
+~~~
+
+Again, stop all currently running cluster nodes.
+~~~bash
+$ ./akka cluster stop
 ~~~
 
 You can use the `./akka cluster start [1-9]` script to start multiple nodes and then use `./akka node start [1-9]` and `./akka node stop [1-9]`
@@ -328,10 +415,48 @@ extension
 
 ### The Cluster Dashboard ###
 
-TODO
+Included in this project is a cluster dashboard. The dashboard visualizes live information about a running cluster.  
+
+~~~bash
+$ git clone https://github.com/mckeeh3/akka-typed-java-cluster.git
+$ cd akka-typed-java-cluster
+$ mvn clean package
+$ ./akka cluster start
+$ ./akka cluster dashboard
+~~~
+Follow the steps above to download, build, run, and bring up a dashboard.
 
 ![Dashboard 1](docs/images/akka-typed-java-cluster-dashboard-01.png)
 
-TODO
+The following sequence of commands changes the cluster state as shown below.
+
+~~~bash
+$ ./akka node stop 1 6    
+Stop node 1 on port 2551
+Stop node 6 on port 2556
+
+$ ./akka node kill 7  
+Kill node 7 on port 2557
+
+$ ./akka node start 1 6  
+Start node 1 on port 2551, management port 8551, HTTP port 9551
+Start node 6 on port 2556, management port 8556, HTTP port 9556
+
+$ ./akka node stop 8   
+Stop node 8 on port 2558
+~~~
 
 ![Dashboard 2](docs/images/akka-typed-java-cluster-dashboard-02.png)
+
+Note that node 1 and 6 remain in a "weekly up" state. (You can learn more about Akka clusters in the
+[Cluster Specification](https://doc.akka.io/docs/akka/current/typed/cluster-concepts.html#cluster-specification)
+and the
+[Cluster Membership Service](https://doc.akka.io/docs/akka/current/typed/cluster-membership.html#cluster-membership-service)
+documentation)
+
+Also note that the
+[leader](https://doc.akka.io/docs/akka/current/typed/cluster-membership.html#leader),
+indicated by the "L" moves from node 1 to 2.
+
+The [oldest node](https://doc.akka.io/docs/akka/current/typed/cluster-singleton.html#singleton-manager),
+indicated by the "O" in node 5, moved from node 1 to node 5. The visualization of the cluster state changes is shown in the dashboard as they happen.

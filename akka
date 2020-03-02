@@ -1,7 +1,7 @@
 #!/bin/bash
 
 helpCluster() {
-  echo "Cluster commands are used to start, stop, view status, and view that dashboard Akka cluster nodes."
+  echo "Cluster commands are used to start, stop, view status, and view the dashboard Akka cluster nodes."
   echo
   echo "./akka cluster start N | stop | status | dashboard [N]"
   echo "./akka cluster start [N]      # Starts one or more cluster nodes as specified by [N] or default 9, which must be 1-9."
@@ -37,7 +37,7 @@ helpAll() {
   echo "This CLI is used to start, stop and view the dashboard nodes in an Akka cluster."
   echo
   echo "These commands manage the Akka cluster as defined in this project. A cluster"
-  echo "of nodes is started using the JAR file built by this project's Maven POM file."
+  echo "of nodes is started using the JAR file built with the project Maven POM file."
   echo
   helpCluster
   echo
