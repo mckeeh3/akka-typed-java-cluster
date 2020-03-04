@@ -3,7 +3,7 @@
 ### Introduction
 
 This is a Java, Maven, Akka project that demonstrates how to setup a basic
-[Akka Cluster](https://doc.akka.io/docs/akka/current/index-cluster.html).
+[Akka Cluster](https://doc.akka.io/docs/akka/current/typed/index-cluster.html).
 
 This project is one in a series of projects that starts with a simple Akka Cluster project and progressively builds up to examples of event sourcing and command query responsibility segregation.
 
@@ -472,7 +472,6 @@ Cluster singletons will be covered in more detail in the
 [akka-typed-java-cluster-singleton](https://github.com/mckeeh3/akka-typed-java-cluster-singleton)
 project in this series.
 
-*** TODO this paragraph ***
 The right-hand side of the dashboard shows the current state of the cluster from the perspective of each of the currently running cluster nodes. The dashboard asks each node for its current view of the cluster. The JavaScript in the dashboard sends an HTTP request to each of the nine nodes in the cluster. The currently running nodes each return a JSON response that contains that node's state and what it knows about the current state of the cluster.
 
 ~~~java
@@ -594,3 +593,5 @@ Once all of the cluster state information has been loaded into the `Nodes` class
 The web client assembles the JSON responses from each of the currently running cluster nodes and renders that information into the nine node panels on the right side of the dashboard. The current leader node information is also rendered on the left side of the dashboard.
 
 By design, it is possible to observe the propagation of cluster state changes across the nodes in the dashboard. By polling each node in the cluster, it is possible to see some of the latency as cluster state changes propagate across the network.
+
+The dashboard shows cluster state changes as they happen. Use this feature to explore how the cluster reacts as nodes join and leave the cluster. Try starting a cluster and then stopping, killing, or downing nodes and observe how this impacts the overall cluster state.
