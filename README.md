@@ -536,7 +536,7 @@ private HttpResponse jsonResponse() {
 }
 ~~~
 
-The above `jsonResponse` method invokes the `loadNodes` method. `loadNodes` does all of the heavy lifting that retrieves the cluster information from the perspective of that node. Note that the HTTP response includes an `Access-Control-Allow-Origin *` HTTP header. This header allows cross-domain access from the web client to each of the up to nine running cluster nodes.
+The above `jsonResponse` method invokes the `loadNodes` method. `loadNodes` does all of the work retrieving the cluster information from the perspective of that node. Note that the HTTP response includes an `Access-Control-Allow-Origin *` HTTP header. This header allows cross-domain access from the web client to each of the up to nine running cluster nodes.
 
 ~~~java
 private static Nodes loadNodes(ActorSystem<Void> actorSystem) {
@@ -585,3 +585,15 @@ private static Nodes loadNodes(ActorSystem<Void> actorSystem) {
     return nodes;
 }
 ~~~
+
+The `loadNodes` method uses the `ClusterEvent.CurrentClusterState` Akka class to retrieve information about each of the currently running cluster nodes. The cluster state information is loaded into an instance of the `Nodes` class. The `Nodes` class contains a list of `Node` class instances, which contain information about each of the currently running cluster nodes.
+
+It is essential to understand that the cluster state retrieved from each node represents how each specific node currently sees the other nodes in the cluster.
+
+While it is relatively easy to retrieve cluster state information, the actual process of communicating cluster state changes across the cluster is complex. Fortunately, maintaining the cluster state is managed within the Akka actor systems running on each node.
+
+Once all of the cluster state information has been loaded into the `Nodes` class instance, along with its list of nodes, the entire object is serialized to JSON and returned to the web client in an HTTP response.
+
+The web client assembles the JSON responses from each of the currently running cluster nodes and renders that information into the nine node panels on the right side of the dashboard. The current leader node information is also rendered on the left side of the dashboard.
+
+By design, it is possible to observe the propagation of cluster state changes across the nodes in the dashboard. By polling each node in the cluster, it is possible to see some of the latency as cluster state changes propagate across the network.
