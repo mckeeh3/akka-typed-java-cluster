@@ -451,7 +451,7 @@ documentation)
 
 Also note that the
 [leader](https://doc.akka.io/docs/akka/current/typed/cluster-membership.html#leader),
-indicated by the "L" moves from node 1 to 2.
+indicated by the "L" moves from node 1 to 2. The leader "L" is red, which indicates that one or more nodes are in an unreachable state. While in this state the leader will not promote nodes to an "up" state. This is the reason why in the above example new nodes remain in a weakly up state.
 
 The [oldest node](https://doc.akka.io/docs/akka/current/typed/cluster-singleton.html#singleton-manager),
 indicated by the "O" in node 5, moved from node 1 to node 5. The visualization of the cluster state changes is shown in the dashboard as they happen.
