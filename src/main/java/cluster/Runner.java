@@ -22,7 +22,7 @@ public class Runner {
         System.out.printf("Start cluster on port(s) %s%n", ports);
 
         ports.forEach(port -> {
-            ActorSystem<Void> actorSystem = ActorSystem.create(Main.create(), "cluster", setupClusterNodeConfig(port));
+            final ActorSystem<Void> actorSystem = ActorSystem.create(Main.create(), "cluster", setupClusterNodeConfig(port));
             AkkaManagement.get(actorSystem.classicSystem()).start();
             HttpServer.start(actorSystem);
         });

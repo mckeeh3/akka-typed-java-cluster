@@ -266,7 +266,7 @@ function nodeColor(state) {
     return color(nodeColors[state]);
 }
 
-let = Label = function () {
+let Label = function () {
     return {
         setX: function(x) { this.x = x; return this; },
         setY: function(y) { this.y = y; return this; },

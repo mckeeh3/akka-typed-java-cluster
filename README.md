@@ -458,3 +458,130 @@ indicated by the "L" moves from node 1 to 2.
 
 The [oldest node](https://doc.akka.io/docs/akka/current/typed/cluster-singleton.html#singleton-manager),
 indicated by the "O" in node 5, moved from node 1 to node 5. The visualization of the cluster state changes is shown in the dashboard as they happen.
+
+### How the Cluster Dashboard Works ###
+
+When the dashboard web page loads, it kicks off included JavaScript code used to render the dashboard web page. The
+[p5.js JavaScript library](https://p5js.org/)
+does most of the actual rendering of running Akka clusters.
+
+The dashboard layout on the left shows the current state of the cluster from the perspective of the current leader node. Please see the
+[Leader documentation](https://doc.akka.io/docs/akka/current/typed/cluster-membership.html#leader)
+for more details about its role in the cluster. That said, the leader node is not that significant; it is NOT a cluster master node.
+
+The left panel also shows Leader node port and the Oldest node port. The Leader node is responsible for making cluster state changes. The Oldest node is of interest when using
+[cluster singleton actors](https://doc.akka.io/docs/akka/current/typed/cluster-singleton.html#singleton-manager).
+Cluster singletons will be covered in more detail in the
+[akka-typed-java-cluster-singleton](https://github.com/mckeeh3/akka-typed-java-cluster-singleton)
+project in this series.
+
+*** TODO this paragraph ***
+The right-hand side of the dashboard shows the current state of the cluster from the perspective of each of the currently running cluster nodes. The dashboard asks each node for its current view of the cluster. The JavaScript in the dashboard sends an HTTP request to each of the nine nodes in the cluster. The currently running nodes each return a JSON response that contains that node's state and what it knows about the current state of the cluster.
+
+~~~java
+private static void startupClusterNodes(List<String> ports) {
+    System.out.printf("Start cluster on port(s) %s%n", ports);
+
+    ports.forEach(port -> {
+        ActorSystem<Void> actorSystem = ActorSystem.create(Main.create(), "cluster", setupClusterNodeConfig(port));
+        AkkaManagement.get(actorSystem.classicSystem()).start();
+        HttpServer.start(actorSystem);
+    });
+}
+~~~
+
+The server-side that responds to the incoming HTTP requests from the client-side JavaScript is handled in the `HttpServer` class. As shown above, the `Runner` class creates an instance of the `HttpServer` class.
+
+~~~java
+private HttpResponse handleHttpRequest(HttpRequest httpRequest) {
+    //log().info("HTTP request '{}'", httpRequest.getUri().path());
+    switch (httpRequest.getUri().path()) {
+        case "/":
+            return htmlFileResponse("dashboard.html");
+        case "/dashboard.js":
+            return jsFileResponse("dashboard.js");
+        case "/p5.js":
+            return jsFileResponse("p5.js");
+        case "/p5.sound.js":
+            return jsFileResponse("p5.sound.js");
+        case "/cluster-state":
+            return jsonResponse();
+        default:
+            return HttpResponse.create().withStatus(404);
+    }
+}
+~~~
+
+Akka HTTP handles the routing and processing of requests in the `handleHttpRequest` method shown above.
+
+~~~java
+case "/cluster-state":
+    return jsonResponse();
+~~~
+
+The web client sends an HTTP request to the `/cluster-state` endpoint. This invokes the `jsonResponse` method.  
+
+~~~java
+private HttpResponse jsonResponse() {
+    try {
+        String jsonContents = loadNodes(actorSystem).toJson();
+        return HttpResponse.create()
+                .withEntity(ContentTypes.create(MediaTypes.APPLICATION_JAVASCRIPT, HttpCharsets.UTF_8), jsonContents)
+                .withHeaders(Collections.singletonList(HttpHeader.parse("Access-Control-Allow-Origin", "*")))
+                .withStatus(StatusCodes.ACCEPTED);
+    } catch (Exception e) {
+        log().error("I/O error on JSON response");
+        return HttpResponse.create().withStatus(StatusCodes.INTERNAL_SERVER_ERROR);
+    }
+}
+~~~
+
+The above `jsonResponse` method invokes the `loadNodes` method. `loadNodes` does all of the heavy lifting that retrieves the cluster information from the perspective of that node. Note that the HTTP response includes an `Access-Control-Allow-Origin *` HTTP header. This header allows cross-domain access from the web client to each of the up to nine running cluster nodes.
+
+~~~java
+private static Nodes loadNodes(ActorSystem<Void> actorSystem) {
+    final Cluster cluster = Cluster.get(actorSystem);
+    final ClusterEvent.CurrentClusterState clusterState = cluster.state();
+
+    final Set<Member> unreachable = clusterState.getUnreachable();
+
+    final Optional<Member> old = StreamSupport.stream(clusterState.getMembers().spliterator(), false)
+            .filter(member -> member.status().equals(MemberStatus.up()))
+            .filter(member -> !(unreachable.contains(member)))
+            .reduce((older, member) -> older.isOlderThan(member) ? older : member);
+
+    final Member oldest = old.orElse(cluster.selfMember());
+
+    final List<Integer> seedNodePorts = seedNodePorts(actorSystem);
+
+    final Nodes nodes = new Nodes(
+            memberPort(cluster.selfMember()),
+            cluster.selfMember().address().equals(clusterState.getLeader()),
+            oldest.equals(cluster.selfMember()));
+
+    StreamSupport.stream(clusterState.getMembers().spliterator(), false)
+            .forEach(new Consumer<Member>() {
+                @Override
+                public void accept(Member member) {
+                    nodes.add(member, leader(member), oldest(member), seedNode(member));
+                }
+
+                private boolean leader(Member member) {
+                    return member.address().equals(clusterState.getLeader());
+                }
+
+                private boolean oldest(Member member) {
+                    return oldest.equals(member);
+                }
+
+                private boolean seedNode(Member member) {
+                    return seedNodePorts.contains(memberPort(member));
+                }
+            });
+
+    clusterState.getUnreachable()
+            .forEach(nodes::addUnreachable);
+
+    return nodes;
+}
+~~~
