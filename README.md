@@ -1,4 +1,4 @@
-## Akka Java Cluster Example
+## Akka Typed Java Cluster Example
 
 ### Introduction
 
