@@ -249,6 +249,12 @@ cluster {
 }
 ~~~
 
+
+> **_Note_** Static seed nodes are ok for this demo, but in real applications, you should use the
+[Akka Management](https://doc.akka.io/docs/akka-management/current/akka-management.html)
+extension
+[Akka Cluster Bootstrap](https://doc.akka.io/docs/akka-management/current/bootstrap/index.html).
+
 Let's walk through a cluster startup scenario with this project. In this example, one JVM starts with no run time arguments. When the `Runner` class `main` method is invoked with no arguments the default is to create three actor systems on ports 2551, 2552, and port 0 (a zero port results in randomly selecting a non-zero port number).
 
 As each actor system is created on a specific port, it looks at the seed node configuration settings. If the actor system's port is one of the seed nodes it knows that it will reach out to the other seed nodes with the goal of forming a cluster. If the actor system's port is not one of the seed nodes it will attempt to contact one of the seed nodes. The non-seed nodes need to announce themselves to one of the seed nodes and ask to join the cluster.
