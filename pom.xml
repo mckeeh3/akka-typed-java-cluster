@@ -72,6 +72,7 @@
             <version>${logback.version}</version>
         </dependency>
 
+        <!-- Json -->
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-core</artifactId>
@@ -81,20 +82,6 @@
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-databind</artifactId>
             <version>${jackson.version}</version>
-        </dependency>
-
-        <!-- Testing -->
-        <dependency>
-            <groupId>com.typesafe.akka</groupId>
-            <artifactId>akka-actor-testkit-typed_${scala.version}</artifactId>
-            <version>${akka.version}</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.junit.jupiter</groupId>
-            <artifactId>junit-jupiter-engine</artifactId>
-            <version>${junit.version}</version>
-            <scope>test</scope>
         </dependency>
     </dependencies>
 
