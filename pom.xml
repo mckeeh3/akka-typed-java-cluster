@@ -11,9 +11,9 @@
     <properties>
         <java.version>8</java.version>
         <scala.version>2.13</scala.version>
-        <akka.version>2.6.4</akka.version>
-        <akka.http.version>10.1.11</akka.http.version>
-        <akka.management.version>1.0.6</akka.management.version>
+        <akka.version>2.6.6</akka.version>
+        <akka.http.version>10.1.12</akka.http.version>
+        <akka.management.version>1.0.8</akka.management.version>
         <logback.version>1.2.3</logback.version>
         <jackson.version>2.10.3</jackson.version>
         <junit.version>5.5.2</junit.version>
