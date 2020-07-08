@@ -9,7 +9,7 @@ import akka.http.javadsl.ConnectHttp;
 import akka.http.javadsl.Http;
 import akka.http.javadsl.ServerBinding;
 import akka.http.javadsl.model.*;
-import akka.stream.ActorMaterializer;
+import akka.stream.Materializer;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
@@ -29,13 +29,13 @@ import java.util.stream.StreamSupport;
 class HttpServer {
   private final int port;
   private final ActorSystem<Void> actorSystem;
-  private final ActorMaterializer actorMaterializer;
+  private final Materializer materializer;
 
   private HttpServer(int port, ActorSystem<Void> actorSystem) {
     this.port = port;
     this.actorSystem = actorSystem;
 
-    actorMaterializer = ActorMaterializer.create(actorSystem.classicSystem());
+    materializer = Materializer.matFromSystem(actorSystem);
 
     startHttpServer();
   }
@@ -54,7 +54,7 @@ class HttpServer {
   private void startHttpServer() {
     try {
       final CompletionStage<ServerBinding> serverBindingCompletionStage = Http.get(actorSystem.classicSystem())
-          .bindAndHandleSync(this::handleHttpRequest, ConnectHttp.toHost("127.0.0.1", port), actorMaterializer);
+          .bindAndHandleSync(this::handleHttpRequest, ConnectHttp.toHost("127.0.0.1", port), materializer);
 
       serverBindingCompletionStage.toCompletableFuture().get(15, TimeUnit.SECONDS);
     } catch (InterruptedException | TimeoutException | ExecutionException e) {
