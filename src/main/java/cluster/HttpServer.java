@@ -5,42 +5,28 @@ import akka.cluster.ClusterEvent;
 import akka.cluster.Member;
 import akka.cluster.MemberStatus;
 import akka.cluster.typed.Cluster;
-import akka.http.javadsl.ConnectHttp;
 import akka.http.javadsl.Http;
-import akka.http.javadsl.ServerBinding;
-import akka.http.javadsl.model.*;
-import akka.stream.Materializer;
+import akka.http.javadsl.model.ContentTypes;
+import akka.http.javadsl.model.headers.RawHeader;
+import akka.http.javadsl.server.Route;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import org.slf4j.Logger;
 import scala.Option;
 
-import java.io.*;
+import java.io.Serializable;
 import java.util.*;
-import java.util.concurrent.CompletionStage;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
+import static akka.http.javadsl.server.Directives.*;
+
 class HttpServer {
-  private final int port;
-  private final ActorSystem<Void> actorSystem;
-  private final Materializer materializer;
+  private final ActorSystem<?> actorSystem;
 
-  private HttpServer(int port, ActorSystem<Void> actorSystem) {
-    this.port = port;
-    this.actorSystem = actorSystem;
-
-    materializer = Materializer.matFromSystem(actorSystem);
-
-    startHttpServer();
-  }
-
-  static void start(ActorSystem<Void> actorSystem) {
+  static void start(ActorSystem<?> actorSystem) {
     final int port = memberPort(Cluster.get(actorSystem).selfMember());
     if (port >= 2551 && port <= 2559) {
       new HttpServer(port + 7000, actorSystem);
@@ -51,92 +37,34 @@ class HttpServer {
     }
   }
 
-  private void startHttpServer() {
-    try {
-      final CompletionStage<ServerBinding> serverBindingCompletionStage = Http.get(actorSystem.classicSystem())
-          .bindAndHandleSync(this::handleHttpRequest, ConnectHttp.toHost("127.0.0.1", port), materializer);
-
-      serverBindingCompletionStage.toCompletableFuture().get(15, TimeUnit.SECONDS);
-    } catch (InterruptedException | TimeoutException | ExecutionException e) {
-      log().error("Monitor HTTP server error", e);
-    } finally {
-      log().info("HTTP server started on port {}", port);
-    }
+  private HttpServer(int port, ActorSystem<?> actorSystem) {
+    this.actorSystem = actorSystem;
+    start(port);
   }
 
-  private HttpResponse handleHttpRequest(HttpRequest httpRequest) {
-    //log().info("HTTP request '{}'", httpRequest.getUri().path());
-    switch (httpRequest.getUri().path()) {
-      case "/":
-        return htmlFileResponse("dashboard.html");
-      case "/dashboard.js":
-        return jsFileResponse("dashboard.js");
-      case "/p5.js":
-        return jsFileResponse("p5.js");
-      case "/p5.sound.js":
-        return jsFileResponse("p5.sound.js");
-      case "/cluster-state":
-        return jsonResponse();
-      default:
-        return HttpResponse.create().withStatus(404);
-    }
+  private void start(int port) {
+    Http.get(actorSystem).newServerAt("localhost", port).bind(route());
+    log().info("HTTP Server started on port {}", "" + port);
   }
 
-  private HttpResponse htmlFileResponse(String filename) {
-    try {
-      final String fileContents = readFile(filename);
-      return HttpResponse.create()
-          .withEntity(ContentTypes.TEXT_HTML_UTF8, fileContents)
-          .withStatus(StatusCodes.ACCEPTED);
-    } catch (IOException e) {
-      log().error(String.format("I/O error on file '%s'", filename), e);
-      return HttpResponse.create().withStatus(StatusCodes.INTERNAL_SERVER_ERROR);
-    }
+  private Route route() {
+    return concat(
+        path("", () -> getFromResource("dashboard.html", ContentTypes.TEXT_HTML_UTF8)),
+        path("dashboard.html", () -> getFromResource("dashboard.html", ContentTypes.TEXT_HTML_UTF8)),
+        path("dashboard.js", () -> getFromResource("dashboard.js", ContentTypes.APPLICATION_JSON)),
+        path("p5.js", () -> getFromResource("p5.js", ContentTypes.APPLICATION_JSON)),
+        path("cluster-state", this::clusterState)
+    );
   }
 
-  private HttpResponse jsFileResponse(String filename) {
-    try {
-      final String fileContents = readFile(filename);
-      return HttpResponse.create()
-          .withEntity(ContentTypes.create(MediaTypes.APPLICATION_JAVASCRIPT, HttpCharsets.UTF_8), fileContents)
-          .withStatus(StatusCodes.ACCEPTED);
-    } catch (IOException e) {
-      log().error(String.format("I/O error on file '%s'", filename), e);
-      return HttpResponse.create().withStatus(StatusCodes.INTERNAL_SERVER_ERROR);
-    }
+  private Route clusterState() {
+    return get(
+        () -> respondWithHeader(RawHeader.create("Access-Control-Allow-Origin", "*"),
+            () -> complete(loadNodes(actorSystem).toJson()))
+    );
   }
 
-  private HttpResponse jsonResponse() {
-    try {
-      final String jsonContents = loadNodes(actorSystem).toJson();
-      return HttpResponse.create()
-          .withEntity(ContentTypes.create(MediaTypes.APPLICATION_JAVASCRIPT, HttpCharsets.UTF_8), jsonContents)
-          .withHeaders(Collections.singletonList(HttpHeader.parse("Access-Control-Allow-Origin", "*")))
-          .withStatus(StatusCodes.ACCEPTED);
-    } catch (Exception e) {
-      log().error("I/O error on JSON response");
-      return HttpResponse.create().withStatus(StatusCodes.INTERNAL_SERVER_ERROR);
-    }
-  }
-
-  private String readFile(String filename) throws IOException {
-    final InputStream inputStream = getClass().getClassLoader().getResourceAsStream(filename);
-    if (inputStream == null) {
-      throw new FileNotFoundException(String.format("Filename '%s'", filename));
-    } else {
-      final StringBuilder fileContents = new StringBuilder();
-
-      try (BufferedReader br = new BufferedReader(new InputStreamReader(inputStream))) {
-        String line;
-        while ((line = br.readLine()) != null) {
-          fileContents.append(String.format("%s%n", line));
-        }
-      }
-      return fileContents.toString();
-    }
-  }
-
-  private static Nodes loadNodes(ActorSystem<Void> actorSystem) {
+  private static Nodes loadNodes(ActorSystem<?> actorSystem) {
     final Cluster cluster = Cluster.get(actorSystem);
     final ClusterEvent.CurrentClusterState clusterState = cluster.state();
 
@@ -198,7 +126,7 @@ class HttpServer {
     return 0;
   }
 
-  private static List<Integer> seedNodePorts(ActorSystem<Void> actorSystem) {
+  private static List<Integer> seedNodePorts(ActorSystem<?> actorSystem) {
     return actorSystem.settings().config().getList("akka.cluster.seed-nodes")
         .stream().map(s -> s.unwrapped().toString())
         .map(s -> {

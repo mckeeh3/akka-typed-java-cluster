@@ -11,11 +11,11 @@
     <properties>
         <java.version>8</java.version>
         <scala.version>2.13</scala.version>
-        <akka.version>2.6.6</akka.version>
-        <akka.http.version>10.1.12</akka.http.version>
+        <akka.version>2.6.8</akka.version>
+        <akka.http.version>10.2.0</akka.http.version>
         <akka.management.version>1.0.8</akka.management.version>
         <logback.version>1.2.3</logback.version>
-        <jackson.version>2.10.3</jackson.version>
+        <jackson.version>2.11.2</jackson.version>
         <junit.version>5.5.2</junit.version>
     </properties>
 
@@ -97,6 +97,14 @@
                 </configuration>
             </plugin>
 
+            <!-- mvn versions:display-dependency-updates -->
+            <!-- mvn versions:display-property-updates -->
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>versions-maven-plugin</artifactId>
+                <version>2.8.1</version>
+            </plugin>
+
             <plugin>
                 <artifactId>maven-surefire-plugin</artifactId>
                 <version>2.19</version>
@@ -114,7 +122,7 @@
                 <artifactId>exec-maven-plugin</artifactId>
                 <version>1.5.0</version>
                 <configuration>
-                    <mainClass>cluster.Runner</mainClass>
+                    <mainClass>cluster.Main</mainClass>
                 </configuration>
             </plugin>
 
@@ -147,7 +155,7 @@
                                 <transformer
                                         implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
                                     <manifestEntries>
-                                        <Main-Class>cluster.Runner</Main-Class>
+                                        <Main-Class>cluster.Main</Main-Class>
                                     </manifestEntries>
                                 </transformer>
                             </transformers>
