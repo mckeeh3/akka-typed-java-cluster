@@ -120,10 +120,9 @@ class HttpServer {
 
   private static int memberPort(Member member) {
     final Option<Object> portOption = member.address().port();
-    if (portOption.isDefined()) {
-      return Integer.parseInt(portOption.get().toString());
-    }
-    return 0;
+    return portOption.isDefined()
+        ? Integer.parseInt(portOption.get().toString())
+        : 0;
   }
 
   private static List<Integer> seedNodePorts(ActorSystem<?> actorSystem) {
