@@ -87,14 +87,14 @@ function windowResized() {
     grid.resize();
 }
 
-function aspectratio(width, height) {
+function aspectRatio(width, height) {
     return height / width;
 }
 
 const grid = {
     borderWidth: 20,
     ticksHorizontal: 76,
-    ticksVertical: aspectratio(16, 9) * 76, // ticksHorizontal
+    ticksVertical: aspectRatio(16, 9) * 76, // ticksHorizontal
     tickWidth: 0,
     resize: function () {
         gridWidth = windowWidth - 2 * this.borderWidth;
