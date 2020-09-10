@@ -137,6 +137,7 @@ class HttpServer {
   }
 
   public static class Nodes implements Serializable {
+    private static final long serialVersionUID = 1L;
     public final int selfPort;
     public final boolean leader;
     public final boolean oldest;
@@ -215,6 +216,7 @@ class HttpServer {
   }
 
   public static class Node implements Serializable {
+    private static final long serialVersionUID = 1L;
     public final int port;
     public final String state;
     public final String memberState;
