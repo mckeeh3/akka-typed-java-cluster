@@ -1,0 +1,53 @@
+#!/bin/bash
+
+# Use this to create or remove a localhost alias to IP address 127.0.0.2.
+
+usage() {
+  echo "Usage: $0 [create|remove] - Create or remove a localhost alias to IP 127.0.0.2." ; exit 1
+}
+
+localhost2Create() {
+  if hash pfctl 2>/dev/null; then
+    ifconfig lo0 alias 127.0.0.2
+    echo "Create localhost alias on IP 127.0.0.2 (OSX)"
+  elif hash ip 2>/dev/null; then
+    ip address add 127.0.0.2/8 dev lo:2
+    echo "Create localhost alias on IP 127.0.0.2 (Linux)"
+  else
+    echo "This command is currently only available on OSX or Linux systems."
+    usage
+  fi
+}
+
+localhost2Remove() {
+  if hash pfctl 2>/dev/null; then
+    ifconfig lo0 -alias 127.0.0.2
+    echo "Remove localhost alias on IP 127.0.0.2 (OSX)"
+  elif hash iptables 2>/dev/null; then
+    ip address del 127.0.0.2/8 dev lo:2
+    echo "Remove localhost alias on IP 127.0.0.2 (Linux)"
+  else
+    echo "This command is currently only available on OSX or Linux systems."
+    usage
+  fi
+}
+
+if ! [ $(id -u) = 0 ]; then
+  echo "Root user (sudo) required."
+  exit 1
+fi
+
+arg=$1
+
+case $arg in
+  "create")
+    localhost2Create
+    ;;
+  "remove")
+    localhost2Remove
+    ;;
+  *)
+    echo "Invalid subcommand '$arg', must be 'create' or 'remove'"
+    usage
+    ;;
+esac

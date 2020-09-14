@@ -1,7 +1,7 @@
 #!/bin/bash
 
 helpCluster() {
-  echo "Cluster commands are used to start, stop, view status, and view the dashboard Akka cluster nodes."
+  echo "Cluster commands are used to start, stop, view status, and open the Akka cluster dashboard."
   echo
   echo "./akka cluster start N | stop | status | dashboard [N]"
   echo "./akka cluster start [N]      # Starts one or more cluster nodes as specified by [N] or default 9, which must be 1-9."
@@ -25,19 +25,21 @@ helpNode() {
 helpNet() {
   echo "Net commands are used to block and unblock network access to cluster nodes."
   echo
-  echo "./akka net block N | unblock | view | enable | disable"
+  echo "./akka net block N | unblock | view | enable | disable | partition"
   echo "./akka net block N...  # Block network access to node ports, ports 255N, nodes N 1-9."
   echo "./akka net unblock     # Reset the network blocking rules."
   echo "./akka net view        # View the current network blocking rules."
   echo "./akka net enable      # Enable packet filtering, which enables blocking network access to cluster nodes. (OSX only)"
   echo "./akka net disable     # Disable packet filtering, which disables blocking network access to cluster nodes. (OSX only)"
+  echo "./akka net localhost2  # Create or remove IP alias 127.0.0.2"
+  echo "./akka net partition   # Partition 127.0.0.2 on or off"
 }
 
 helpAll() {
   echo "This CLI is used to start, stop and view the dashboard nodes in an Akka cluster."
   echo
   echo "These commands manage the Akka cluster as defined in this project. A cluster"
-  echo "of nodes is started using the JAR file built with the project Maven POM file."
+  echo "of nodes is started using the JAR file built by this project's Maven POM file."
   echo
   helpCluster
   echo
@@ -117,6 +119,12 @@ netCommand() {
       ;;
     "unblock")
       "$scriptPath"/net-unblock $arguments
+      ;;
+    "localhost2")
+      "$scriptPath"/net-localhost2 $arguments
+      ;;
+    "partition")
+      "$scriptPath"/net-partition $arguments
       ;;
     "view")
       "$scriptPath"/net-view $arguments

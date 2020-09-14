@@ -9,6 +9,23 @@ usage() {
   echo "Usage: $0 nodes - Start cluster nodes, node numbers must 1 through 9." ; exit 1
 }
 
+checkLocalHost2() {
+  if hash pfctl 2>/dev/null; then
+    ifconfig | grep "127.0.0.2" > /dev/null
+    localhost2=$?
+  elif hash ip 2>/dev/null; then
+    ip address | grep "127.0.0.2" > /dev/null
+    localhost2=$?
+  else
+    localhost2=1
+  fi
+  if [ $localhost2 -eq 0 ] ; then
+    export localhost2=true
+  else
+    export localhost2=false
+  fi
+}
+
 startNode() {
   node=$1
   port="255"$node
@@ -29,6 +46,7 @@ while [[ $# -gt 0 ]]; do
   shift
 
   if [[ $node =~ ^[1-9]$ ]] ; then
+    checkLocalHost2
     startNode "$node"
   else
     echo "Cluster node number $node is invalid. The node number must be 1 through 9."

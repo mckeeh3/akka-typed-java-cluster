@@ -37,7 +37,24 @@ stopNodeCygwin() {
 
   if [[ $httpStatus == 200 ]] ; then
     echo "Stop node $node on port $nodePort via Akka management port $mgmtPort"
-    curl --silent -X DELETE http://localhost:"$mgmtPort"/cluster/members/cluster@127.0.0.1:"$nodePort" --output /dev/null
+    curl --silent -X DELETE http://localhost:"$mgmtPort"/cluster/members/cluster@"$localhostName":"$nodePort" --output /dev/null
+  fi
+}
+
+getLocalhostName() {
+  if hash pfctl 2>/dev/null; then
+    ifconfig | grep "127.0.0.2" > /dev/null
+    localhost2=$?
+  elif hash ip 2>/dev/null; then
+    ip address | grep "127.0.0.2" > /dev/null
+    localhost2=$?
+  else
+    localhost2=1
+  fi
+  if [ $localhost2 -eq 0 ] ; then
+    export localhostName="127.0.0.2"
+  else
+    export localhostName="127.0.0.1"
   fi
 }
 
@@ -51,6 +68,7 @@ while [[ $# -gt 0 ]]; do
   shift
 
   if [[ $node =~ ^[1-9]$ ]] ; then
+    getLocalhostName
     stopNode "$node"
   else
     echo "Cluster node number $node is invalid. The node number must be 1 through 9."

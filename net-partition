@@ -1,0 +1,53 @@
+#!/bin/bash
+
+# Use this to turn on or off blocking network traffic to IP address 127.0.0.2.
+
+usage() {
+  echo "Usage: $0 [on|off] - Turn on or off blocking network traffic to IP 127.0.0.2." ; exit 1
+}
+
+partitionOn() {
+  if hash pfctl 2>/dev/null; then
+    (pfctl -sr 2>/dev/null; echo "block drop quick proto tcp from 127.0.0.1 to 127.0.0.2") | pfctl -f - 2>/dev/null
+    echo "Create partition between IP 127.0.0.1 and 127.0.0.2 (OSX)"
+  elif hash iptables 2>/dev/null; then
+    iptables -A INPUT -p tcp -s 127.0.0.1 -d 127.0.0.2 -j DROP
+    echo "Create partition between IP 127.0.0.1 and 127.0.0.2 (Linux)"
+  else
+    echo "This command is currently only available on OSX or Linux systems."
+    usage
+  fi
+}
+
+partitionOff() {
+  if hash pfctl 2>/dev/null; then
+    pfctl -f /etc/pf.conf 2>/dev/null
+    echo "Drop partition between IP 127.0.0.1 and 127.0.0.2 (OSX)"
+  elif hash iptables 2>/dev/null; then
+    iptables -D INPUT -p tcp -s 127.0.0.1 -d 127.0.0.2 -j DROP
+    echo "Drop partition between IP 127.0.0.1 and 127.0.0.2 (Linux)"
+  else
+    echo "This command is currently only available on OSX or Linux systems."
+    usage
+  fi
+}
+
+if ! [ $(id -u) = 0 ]; then
+  echo "Root user (sudo) required."
+  exit 1
+fi
+
+arg=$1
+
+case $arg in
+  "on")
+    partitionOn
+    ;;
+  "off")
+    partitionOff
+    ;;
+  *)
+    echo "Invalid subcommand '$arg', must be 'on' or 'off'"
+    usage
+    ;;
+esac

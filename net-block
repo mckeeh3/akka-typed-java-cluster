@@ -18,7 +18,7 @@ block() {
     iptables -A INPUT -p tcp --dport 255$node -j DROP
     echo "blocked node $node, port 255$node (Linux)"
   else
-    usage
+    echo "This command is currently only available on OSX or Linux systems."
   fi
 }
 
