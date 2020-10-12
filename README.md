@@ -1,7 +1,5 @@
 ## Akka Typed Java Cluster Example
 
-### Introduction
-
 This is a Java, Maven, Akka project that demonstrates how to setup a basic
 [Akka Cluster](https://doc.akka.io/docs/akka/current/typed/index-cluster.html).
 
