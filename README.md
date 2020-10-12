@@ -11,10 +11,14 @@ The project series is composed of the following GitHub repos:
 * [akka-typed-java-cluster](https://github.com/mckeeh3/akka-typed-java-cluster) (this project)
 * [akka-typed-java-cluster-sbr](https://github.com/mckeeh3/akka-typed-java-cluster-sbr)
 * [akka-typed-java-cluster-aware](https://github.com/mckeeh3/akka-typed-java-cluster-aware)
-* [akka-typed-java-cluster-singleton](https://github.com/mckeeh3/akka-typed-java-cluster-singleton) (coming soon)
-* [akka-typed-java-cluster-sharding](https://github.com/mckeeh3/akka-typed-java-cluster-sharding) (coming soon)
-* [akka-typed-java-cluster-persistence](https://github.com/mckeeh3/akka-typed-java-cluster-persistence) (coming soon)
-* [akka-typed-java-cluster-persistence-query](https://github.com/mckeeh3/akka-typed-java-cluster-persistence-query) (coming soon)
+* [akka-typed-java-cluster-singleton](https://github.com/mckeeh3/akka-typed-java-cluster-singleton)
+* [akka-typed-java-cluster-sharding](https://github.com/mckeeh3/akka-typed-java-cluster-sharding)
+* [woe-sim](https://github.com/mckeeh3/woe-sim) an example of 
+[Akka Persistence](https://doc.akka.io/docs/akka/current/typed/index-persistence.html)
+* [woe-twin](https://github.com/mckeeh3/woe-twin) an example of 
+[Akka Persistence](https://doc.akka.io/docs/akka/current/typed/index-persistence.html)
+ and 
+[Akka Projections](https://doc.akka.io/docs/akka-projection/current/)
 
 Each project can be cloned, built, and runs independently of the other projects.
 
