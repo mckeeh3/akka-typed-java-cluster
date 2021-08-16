@@ -1,4 +1,4 @@
-## Akka Typed Java Cluster Example
+# Akka Typed Java Cluster Example
 
 This is a Java, Maven, Akka project that demonstrates how to setup a basic
 [Akka Cluster](https://doc.akka.io/docs/akka/current/typed/index-cluster.html).
@@ -6,21 +6,32 @@ This is a Java, Maven, Akka project that demonstrates how to setup a basic
 This project is one in a series of projects that starts with a simple Akka Cluster project and progressively builds up to examples of event sourcing and command query responsibility segregation.
 
 The project series is composed of the following GitHub repos:
+
 * [akka-typed-java-cluster](https://github.com/mckeeh3/akka-typed-java-cluster) (this project)
-* [akka-typed-java-cluster-sbr](https://github.com/mckeeh3/akka-typed-java-cluster-sbr)
 * [akka-typed-java-cluster-aware](https://github.com/mckeeh3/akka-typed-java-cluster-aware)
 * [akka-typed-java-cluster-singleton](https://github.com/mckeeh3/akka-typed-java-cluster-singleton)
 * [akka-typed-java-cluster-sharding](https://github.com/mckeeh3/akka-typed-java-cluster-sharding)
-* [woe-sim](https://github.com/mckeeh3/woe-sim) an example of 
+* [woe-sim](https://github.com/mckeeh3/woe-sim) an example of
 [Akka Persistence](https://doc.akka.io/docs/akka/current/typed/index-persistence.html)
-* [woe-twin](https://github.com/mckeeh3/woe-twin) an example of 
+* [woe-twin](https://github.com/mckeeh3/woe-twin) an example of
 [Akka Persistence](https://doc.akka.io/docs/akka/current/typed/index-persistence.html)
- and 
+ and
 [Akka Projections](https://doc.akka.io/docs/akka-projection/current/)
 
 Each project can be cloned, built, and runs independently of the other projects.
 
-### About Akka Clustering
+- [Akka Typed Java Cluster Example](#akka-typed-java-cluster-example)
+  - [About Akka Clustering](#about-akka-clustering)
+  - [The ClusterListenerActor Actor](#the-clusterlisteneractor-actor)
+  - [How it works](#how-it-works)
+  - [Installation](#installation)
+  - [Run a cluster (Mac, Linux, Cygwin)](#run-a-cluster-mac-linux-cygwin)
+  - [The Cluster Dashboard](#the-cluster-dashboard)
+  - [How the Cluster Dashboard Works](#how-the-cluster-dashboard-works)
+  - [About the Akka Split Brain Resolver](#about-the-akka-split-brain-resolver)
+  - [Manually Trigger a Network Partition](#manually-trigger-a-network-partition)
+
+## About Akka Clustering
 
 According to the [Akka documentation](https://doc.akka.io/docs/akka/current/common/cluster.html),
 "*Akka Cluster provides a fault-tolerant decentralized peer-to-peer based cluster membership service with no single point of failure or single point of bottleneck. It does this using gossip protocols and an automatic failure detector.*
@@ -34,7 +45,7 @@ The actor model "*[(Wikipedia)](https://en.wikipedia.org/wiki/Actor_model) treat
 
 Akka actors communicate with each other via asynchronous messages. Akka actors systems run on Java Virtual Machines, and with Akka clusters, a single actor system may logically span multiple networked JVMs. This networked actor system abstraction layer makes it possible for actors to transparently communicate with each across a cluster of nodes. One way to think of this is that from the perspective of actors, they live in an actor system, the fact that the actor system is running on one or more nodes is, for the most part, hidden within the abstraction layer.
 
-### The ClusterListenerActor Actor
+## The ClusterListenerActor Actor
 
 Akka actors are implemented in Java or Scala. You create actors as Java or Scala classes. There are two ways to implement actors, either
 [typed](https://doc.akka.io/docs/akka/current/typed/actors.html)
@@ -50,7 +61,8 @@ The first actor we will look at is named ClusterListenerActor. This actor is set
 
 The ClusterListenerActor provides a simple view of cluster activity.
 Here is an example of the log output:
-~~~
+
+~~~text
 15:22:08.580 INFO    - ClusterListenerActor - ReachabilityChanged() sent to Member(address = akka://cluster@127.0.0.1:2551, status = Up)
 15:22:08.581 INFO    - ClusterListenerActor - 1 (LEADER) (OLDEST) Member(address = akka://cluster@127.0.0.1:2551, status = Up)
 15:22:08.581 INFO    - ClusterListenerActor - 2 Member(address = akka://cluster@127.0.0.1:2552, status = Joining)
@@ -62,6 +74,7 @@ Here is an example of the log output:
 15:22:08.581 INFO    - ClusterListenerActor - 8 Member(address = akka://cluster@127.0.0.1:2558, status = Up)
 15:22:08.581 INFO    - ClusterListenerActor - 9 Member(address = akka://cluster@127.0.0.1:2559, status = Up)
 ~~~
+
 A cluster event message triggered the above log output. This actor logs the event message, and it lists the current state of each of the members in the cluster.  Note that this log output shows that this is currently a cluster of nine nodes. Some of the nodes are in the "up" state. Some nodes are in the "joining" state.  The
 [Cluster Membership Service](https://doc.akka.io/docs/akka/current/typed/cluster-membership.html#cluster-membership-service)
 Akka documentation is an excellent place to start to get a better understanding of the mechanics of nodes and how they form themselves into a cluster.
@@ -204,7 +217,7 @@ public Receive<ClusterEvent.ClusterDomainEvent> createReceive() {
 
 As each node in the cluster starts up an instance of the ClusterListenerActor is started. The actor then logs cluster events as they occur in each node. You can examine the logs from each cluster node to review the cluster events and see the state of the cluster nodes, again from the perspective of each node.
 
-### How it works
+## How it works
 
 In this project, we are going to start with a basic template for an Akka, Java, and Maven based example that has the code and configuration for running an Akka Cluster. The Maven POM file uses a plugin that builds a self contained JAR file for running the code using the `java -jar` command.
 
@@ -251,7 +264,6 @@ cluster {
 }
 ~~~
 
-
 > **_Note_** Static seed nodes are ok for this demo, but in real applications, you should use the
 [Akka Management](https://doc.akka.io/docs/akka-management/current/akka-management.html)
 extension
@@ -289,27 +301,29 @@ Also, the flexibility to expand a cluster by adding more nodes is the mechanism 
 
 Hopefully, this overview has shed some light on how Akka provides "*no single point of failure or single point of bottleneck*" and how "*Akka cluster allows for building distributed applications, where one application or service spans multiple nodes.*"
 
-### Installation
+## Installation
 
 ~~~bash
-$ git clone https://github.com/mckeeh3/akka-typed-java-cluster.git
-$ cd akka-typed-java-cluster
-$ mvn clean package
+git clone https://github.com/mckeeh3/akka-typed-java-cluster.git
+cd akka-typed-java-cluster
+mvn clean package
 ~~~
 
 The Maven command builds the project and creates a self contained runnable JAR.
 
-### Run a cluster (Mac, Linux, Cygwin)
+## Run a cluster (Mac, Linux, Cygwin)
 
 The project contains a set of scripts that can be used to start and stop individual cluster nodes or start and stop a cluster of nodes.
 
 The main script `./akka` is provided to run a cluster of nodes or start and stop individual nodes.
 
 ~~~bash
-$ ./akka
+./akka
 ~~~
+
 Run the akka script with no parameters to see the available options.
-~~~
+
+~~~text
 This CLI is used to start, stop and view the dashboard nodes in an Akka cluster.
 
 These commands manage the Akka cluster as defined in this project. A cluster
@@ -347,8 +361,12 @@ The `cluster` and `node` start options will start Akka nodes on ports 2551 throu
 Both `stdin` and `stderr` output is sent to a log files in the `/tmp` directory using the file naming convention `/tmp/<project-dir-name>-N.log`.
 
 Start a cluster of nine nodes running on ports 2551 to 2559.
+
 ~~~bash
-$ ./akka cluster start
+./akka cluster start
+~~~
+
+~~~text
 Starting 9 cluster nodes
 Start node 1 on port 2551, management port 8551, HTTP port 9551
 Start node 2 on port 2552, management port 8552, HTTP port 9552
@@ -362,8 +380,12 @@ Start node 9 on port 2559, management port 8559, HTTP port 9559
 ~~~
 
 Stop all currently running cluster nodes.
+
 ~~~bash
-$ ./akka cluster stop
+./akka cluster stop
+~~~
+
+~~~text
 Stop node 1 on port 2551
 Stop node 2 on port 2552
 Stop node 3 on port 2553
@@ -376,29 +398,45 @@ Stop node 9 on port 2559
 ~~~
 
 Stop node 3 on port 2553.
+
 ~~~bash
-$ ./akka node stop 3
+./akka node stop 3
+~~~
+
+~~~text
 Stop node 3 on port 2553
 ~~~
 
 Stop nodes 5 and 7 on ports 2555 and 2557.
+
 ~~~bash
-$ ./akka node stop 5 7
+./akka node stop 5 7
+~~~
+
+~~~text
 Stop node 5 on port 2555
 Stop node 7 on port 2557
 ~~~
 
 Start node 3, 5, and 7 on ports 2553, 2555 and2557.
+
 ~~~bash
-$ ./akka node start 3 5 7
+./akka node start 3 5 7
+~~~
+
+~~~text
 Start node 3 on port 2553, management port 8553, HTTP port 9553
 Start node 5 on port 2555, management port 8555, HTTP port 9555
 Start node 7 on port 2557, management port 8557, HTTP port 9557
 ~~~
 
 Start a cluster of four nodes on ports 2551, 2552, 2553, and 2554.
+
 ~~~bash
-$ ./akka cluster start 4
+./akka cluster start 4
+~~~
+
+~~~text
 Starting 4 cluster nodes
 Start node 1 on port 2551, management port 8551, HTTP port 9551
 Start node 2 on port 2552, management port 8552, HTTP port 9552
@@ -407,8 +445,9 @@ Start node 4 on port 2554, management port 8554, HTTP port 9554
 ~~~
 
 Again, stop all currently running cluster nodes.
+
 ~~~bash
-$ ./akka cluster stop
+./akka cluster stop
 ~~~
 
 The `./akka cluster status` command displays the status of a currently running cluster in JSON format using the
@@ -416,17 +455,18 @@ The `./akka cluster status` command displays the status of a currently running c
 extension
 [Cluster Http Management](https://developer.lightbend.com/docs/akka-management/current/cluster-http-management.html).
 
-### The Cluster Dashboard ###
+## The Cluster Dashboard
 
 Included in this project is a cluster dashboard. The dashboard visualizes live information about a running cluster.  
 
 ~~~bash
-$ git clone https://github.com/mckeeh3/akka-typed-java-cluster.git
-$ cd akka-typed-java-cluster
-$ mvn clean package
-$ ./akka cluster start
-$ ./akka cluster dashboard
+git clone https://github.com/mckeeh3/akka-typed-java-cluster.git
+cd akka-typed-java-cluster
+mvn clean package
+./akka cluster start
+./akka cluster dashboard
 ~~~
+
 Follow the steps above to download, build, run, and bring up a dashboard in your default web browser.
 
 ![Dashboard 1](docs/images/akka-typed-java-cluster-dashboard-01.png)
@@ -434,18 +474,36 @@ Follow the steps above to download, build, run, and bring up a dashboard in your
 The following sequence of commands changes the cluster state as shown below.
 
 ~~~bash
-$ ./akka node stop 1 6    
+./akka node stop 1 6
+~~~
+
+~~~text
 Stop node 1 on port 2551
 Stop node 6 on port 2556
+~~~
 
-$ ./akka node kill 7  
+~~~bash
+./akka node kill 7
+~~~
+
+~~~text
 Kill node 7 on port 2557
+~~~
 
-$ ./akka node start 1 6  
+~~~bash
+./akka node start 1 6
+~~~
+
+~~~text
 Start node 1 on port 2551, management port 8551, HTTP port 9551
 Start node 6 on port 2556, management port 8556, HTTP port 9556
+~~~
 
-$ ./akka node stop 8   
+~~~bash
+./akka node stop 8   
+~~~
+
+~~~text
 Stop node 8 on port 2558
 ~~~
 
@@ -464,7 +522,7 @@ indicated by the "L" moves from node 1 to 2. The leader "L" is red, which indica
 The [oldest node](https://doc.akka.io/docs/akka/current/typed/cluster-singleton.html#singleton-manager),
 indicated by the "O" in node 5, moved from node 1 to node 5. The visualization of the cluster state changes is shown in the dashboard as they happen.
 
-### How the Cluster Dashboard Works ###
+## How the Cluster Dashboard Works
 
 When the dashboard web page loads, it kicks off included JavaScript code used to render the dashboard web page. The
 [p5.js JavaScript library](https://p5js.org/)
@@ -603,3 +661,70 @@ The web client assembles the JSON responses from each of the currently running c
 By design, it is possible to observe the propagation of cluster state changes across the nodes in the dashboard. By polling each node in the cluster, it is possible to see some of the latency as cluster state changes propagate across the network.
 
 The dashboard shows cluster state changes as they happen. Use this feature to explore how the cluster reacts as nodes join and leave the cluster. Try starting a cluster and then stopping, killing, or downing nodes and observe how this impacts the overall cluster state.
+
+## About the Akka Split Brain Resolver
+
+This project is set up to manually trigger network partitions. The provided cluster dashboard visualizes the sequence of events that occur when a running Akka cluster encounters a network partition. The project includes a sample Java Akka Cluster project, scripts for controlling clusters, and a web based cluster dashboard for observing changes in cluster node states as they happen.
+
+Please see the [Split Brain Resolver](https://doc.akka.io/docs/akka/current/split-brain-resolver.html#split-brain-resolver) documentation for details.
+
+## Manually Trigger a Network Partition
+
+Follow these steps to manually introduce a network partition.
+
+These steps have been tested with Linux and Mac OSX.
+
+On the OSX, before starting an Akka cluster manually enable `localhost2`. This step is not requires for Linux systems.
+
+~~~bash
+sudo ./akka net enable
+sudo ./akka net localhost2 create
+~~~
+
+~~~text
+Create localhost alias on IP 127.0.0.2 (OSX)
+~~~
+
+Start a cluster with the default 9 nodes. Then start the dashboard.
+
+~~~bash
+./akka cluster start
+./akka cluster dashboard
+~~~
+
+![Dashboard 1](docs/images/akka-typed-java-cluster-sbr-01.png)
+
+Wait for all of the node to start showing a green up status on the dashboard.
+
+Next, manually introduce a network partition between the first 5 nodes running on 127.0.0.1 and the last 4 nodes running on 127.0.0.2.
+
+~~~bash
+sudo ./akka net partition on
+~~~
+
+![Dashboard 1](docs/images/akka-typed-java-cluster-sbr-02.png)
+
+In a few moments, the dashboard should look like the above image—nodes 1 through 5 each show green with nodes 6 through 9 showing red. The partition has stopped network traffic from the first five nodes to the last four nodes. The first five nodes can communicate with each other, so they show a green status.
+
+The bottom four nodes can communicate with each other, but they are unable to communicate with any of the first five nodes running on 127.0.0.1. This view demonstrates a classic network partition or split-brain.
+
+When network partitions occur, the Akka clusters will wait for a configured period of time in the hopes that the issue will resolve itself. The `akka.cluster.split-brain-resolver.stable-after` configuration setting defines how long the SBR resolver will wait before taking action. There are multiple [SBR Stratigies](https://doc.akka.io/docs/akka/current/split-brain-resolver.html#strategies) available. In this demo, the default keep majority strategy is used.
+
+![Dashboard 1](docs/images/akka-typed-java-cluster-sbr-03.png)
+
+Once the SBR `stable-after` wait period is over, the SBR on each side of the network partition kicks in, and they both independently decide how to resolve the issue. With the SBR keep majority strategy, the partition with the most remaining nodes stays up, and the partition with the least number of nodes shuts down. In the above screenshot, the four bottom nodes are downed by the SBR on the majority side of the partition. Simultaneously, the nodes on the other side of the  partition are shut down by the SBR.
+
+![Dashboard 1](docs/images/akka-typed-java-cluster-sbr-04.png)
+
+Now that the two split clusters have completed the SBR actions, there is one remaining cluster with five nodes.
+
+Before starting any new nodes, it is necessary to turn off the partition.
+
+~~~bash
+sudo ./akka net partition off
+./akka node start 6 7 8 9
+~~~~
+
+![Dashboard 1](docs/images/akka-typed-java-cluster-sbr-01.png)
+
+In this demo, the downed and stopped nodes are manually restarted. In an orchestration environment, such as Kubernetes, the downed node would automatically be replaced.

@@ -16,9 +16,7 @@ class Main {
     return Behaviors.setup(context -> {
       bootstrap(context);
 
-      return Behaviors.receive(Void.class)
-        .onSignal(Terminated.class, signal -> Behaviors.stopped())
-        .build();
+      return Behaviors.receive(Void.class).onSignal(Terminated.class, signal -> Behaviors.stopped()).build();
     });
   }
 
