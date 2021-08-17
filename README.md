@@ -11,7 +11,8 @@ The project series is composed of the following GitHub repos:
 * [akka-typed-java-cluster-aware](https://github.com/mckeeh3/akka-typed-java-cluster-aware)
 * [akka-typed-java-cluster-singleton](https://github.com/mckeeh3/akka-typed-java-cluster-singleton)
 * [akka-typed-java-cluster-sharding](https://github.com/mckeeh3/akka-typed-java-cluster-sharding)
-* [simulator](https://github.com/mckeeh3/akka-cluster-kubernetes-simulator) and [visualizer](https://github.com/mckeeh3/akka-cluster-kubernetes-visualizer) Akka Cluster Sharding demo
+* [simulator](https://github.com/mckeeh3/akka-cluster-kubernetes-simulator) and
+[visualizer](https://github.com/mckeeh3/akka-cluster-kubernetes-visualizer) Akka Cluster Sharding demo
 * [woe-sim](https://github.com/mckeeh3/woe-sim) an example of
 [Akka Persistence](https://doc.akka.io/docs/akka/current/typed/index-persistence.html)
 * [woe-twin](https://github.com/mckeeh3/woe-twin) an example of
@@ -86,7 +87,6 @@ Akka typed actors use either an
 or
 [functional style](https://doc.akka.io/docs/akka/current/typed/actors.html#functional-style).
 This Cluster Listener Actor is an example of an object-oriented actor implementation.
-
 
 ~~~java
 package cluster;
