@@ -738,6 +738,11 @@ On the OSX, before starting an Akka cluster manually enable `localhost2`. This s
 
 ~~~bash
 sudo ./akka net enable
+~~~
+
+On both OSX and Linux create a localhost2 127.0.0.2 alias.
+
+~~~bash
 sudo ./akka net localhost2 create
 ~~~
 
