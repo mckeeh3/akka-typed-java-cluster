@@ -31,7 +31,10 @@ Each project can be cloned, built, and runs independently of the other projects.
   - [The Cluster Dashboard](#the-cluster-dashboard)
   - [How the Cluster Dashboard Works](#how-the-cluster-dashboard-works)
   - [About the Akka Split Brain Resolver](#about-the-akka-split-brain-resolver)
-  - [Manually Trigger a Network Partition](#manually-trigger-a-network-partition)
+    - [Enable and Disable the Akka SBR](#enable-and-disable-the-akka-sbr)
+      - [SBR Enabled](#sbr-enabled)
+      - [SBR Disabled](#sbr-disabled)
+    - [Manually Trigger a Split Brain (Network Partition)](#manually-trigger-a-split-brain-network-partition)
 
 ## About Akka Clustering
 
@@ -669,7 +672,63 @@ This project is set up to manually trigger network partitions. The provided clus
 
 Please see the [Split Brain Resolver](https://doc.akka.io/docs/akka/current/split-brain-resolver.html#split-brain-resolver) documentation for details.
 
-## Manually Trigger a Network Partition
+### Enable and Disable the Akka SBR
+
+The Akka SBR is enabled in the `application.conf`. To enable SBR in this project edit the `application.conf` file shown below.
+
+~~~text
+akka {
+  loglevel = DEBUG
+  log-config-on-start = off
+
+  actor {
+    provider = "cluster"
+  }
+
+  cluster {
+    seed-nodes = [
+      "akka://cluster@127.0.0.1:2551",
+      "akka://cluster@127.0.0.1:2552"]
+
+    # Comment this line out to disable the SBR
+    #downing-provider-class = "akka.cluster.sbr.SplitBrainResolverProvider"
+
+    split-brain-resolver {
+      stable-after = 15s # wait a few more seconds beyond the default 10s for demo purposes
+    }
+  }
+
+  management {
+    http {
+        hostname = "localhost"
+        port = 8558
+        port = ${?akka_management_http_port}
+        route-providers-read-only = false
+    }
+  }
+}
+
+useLocalhost2 = false
+useLocalhost2 = ${?localhost2}
+~~~
+
+Uncomment the `downing-provider-class` to enable SBR then `mvn clean package` to rebuild the app.
+
+#### SBR Enabled
+
+~~~text
+    # Comment this line out to disable the SBR
+    downing-provider-class = "akka.cluster.sbr.SplitBrainResolverProvider"
+~~~
+
+#### SBR Disabled
+
+~~~text
+    # Comment this line out to disable the SBR
+    #downing-provider-class = "akka.cluster.sbr.SplitBrainResolverProvider"
+~~~
+
+### Manually Trigger a Split Brain (Network Partition)
 
 Follow these steps to manually introduce a network partition.
 
