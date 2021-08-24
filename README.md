@@ -225,36 +225,46 @@ As each node in the cluster starts up an instance of the ClusterListenerActor is
 
 In this project, we are going to start with a basic template for an Akka, Java, and Maven based example that has the code and configuration for running an Akka Cluster. The Maven POM file uses a plugin that builds a self contained JAR file for running the code using the `java -jar` command.
 
-When the project code is executed the action starts in the `Runner` class `main` method.
+When the project code is executed the action starts in the `Main` class `main` method.
 
 ~~~java
-public static void main(String[] args) {
+  public static void main(String[] args) {
     if (args.length == 0) {
-        startupClusterNodes(Arrays.asList("2551", "2552", "0"));
-    } else {
-        startupClusterNodes(Arrays.asList(args));
+      throw new RuntimeException("Akka node port is required.");
     }
-}
+    final var port = Arrays.asList(args).get(0);
+    final var actorSystem = ActorSystem.create(Main.create(), "cluster", setupClusterNodeConfig(port));
+    AkkaManagement.get(actorSystem).start();
+    HttpServer.start(actorSystem);
+  }
 ~~~
 
-The `main` method invokes the `startupClusterNodes` method passing it a list of ports. A default set of three ports is used if no arguments are provided.
+The `main` method starts an Akka actor system configured on a specific port. The configuration of the actor system is adjusted in the `setupClusterNodeConfig` method.
 
 ~~~java
-private static void startupClusterNodes(List<String> ports) {
-    System.out.printf("Start cluster on port(s) %s%n", ports);
+  private static Config setupClusterNodeConfig(String port) {
+    final var config = ConfigFactory.load();
+    final var useLocalhost2 = config.getBoolean("useLocalhost2");
 
-    ports.forEach(port -> {
-        ActorSystem<Void> actorSystem = ActorSystem.create(Main.create(), "cluster", setupClusterNodeConfig(port));
-        AkkaManagement.get(actorSystem.classicSystem()).start();
-        HttpServer.start(actorSystem);
-    });
-}
+    final var localhost1 = "127.0.0.1";
+    final var localhost2 = "127.0.0.2";
+    final var hostname = useLocalhost2 && port.compareTo("2555") > 0 ? localhost2 : localhost1;
+
+    return ConfigFactory
+        .parseString(String.format("akka.remote.artery.canonical.hostname = \"%s\"%n", hostname)
+            + String.format("akka.remote.artery.canonical.port=%s%n", port)
+            + String.format("akka.management.http.hostname = \"%s\"%n", "127.0.0.1")
+            + String.format("akka.management.http.port=%s%n", port.replace("255", "855"))
+            + String.format("akka.management.http.route-providers-read-only = %s%n", "false")
+            + String.format("akka.remote.artery.advanced.tcp.outbound-client-hostname = %s%n", hostname))
+        .withFallback(config);
+  }
 ~~~
 
-The `startupClusterNodes` methods loops through the list of ports. An actor system is created for each port.
+This method sets the configuration for Split Brain testing. Note the use of localhost 1 and 2. The environment variable `useLocalhost2` is set in scripts provided in the project. See the SBR sections of this README for more details.
 
 ~~~java
-ActorSystem<Void> actorSystem = ActorSystem.create(Main.create(), "cluster", setupClusterNodeConfig(port));
+final var actorSystem = ActorSystem.create(Main.create(), "cluster", setupClusterNodeConfig(port));
 ~~~
 
 A lot happens when an actor system is created. Many of the details that determine how to run the actor system are defined via configuration settings. This project includes an `application.conf` configuration file, which is located in the `src/main/resources` directory. One of the most critical configuration settings defines the actor system host and port. When an actor system runs in a cluster, the configuration also defines how each node will locate and join the cluster. In this project, nodes join the cluster using what are called
@@ -273,7 +283,7 @@ cluster {
 extension
 [Akka Cluster Bootstrap](https://doc.akka.io/docs/akka-management/current/bootstrap/index.html).
 
-Let's walk through a cluster startup scenario with this project. In this example, one JVM starts with no run time arguments. When the `Runner` class `main` method is invoked with no arguments the default is to create three actor systems on ports 2551, 2552, and port 0 (a zero port results in randomly selecting a non-zero port number).
+Let's walk through a cluster startup scenario with this project. In this example, one JVM starts with no run time arguments. When the `Main` class `main` method is invoked with no arguments the default is to create three actor systems on ports 2551, 2552, and port 0 (a zero port results in randomly selecting a non-zero port number).
 
 As each actor system is created on a specific port, it looks at the seed node configuration settings. If the actor system's port is one of the seed nodes it knows that it will reach out to the other seed nodes with the goal of forming a cluster. If the actor system's port is not one of the seed nodes it will attempt to contact one of the seed nodes. The non-seed nodes need to announce themselves to one of the seed nodes and ask to join the cluster.
 
@@ -461,7 +471,7 @@ extension
 
 ## The Cluster Dashboard
 
-Included in this project is a cluster dashboard. The dashboard visualizes live information about a running cluster.  
+Included in this project is a cluster dashboard. The dashboard visualizes live information about a running cluster.
 
 ~~~bash
 git clone https://github.com/mckeeh3/akka-typed-java-cluster.git
@@ -504,7 +514,7 @@ Start node 6 on port 2556, management port 8556, HTTP port 9556
 ~~~
 
 ~~~bash
-./akka node stop 8   
+./akka node stop 8
 ~~~
 
 ~~~text
@@ -556,7 +566,7 @@ private static void startupClusterNodes(List<String> ports) {
 }
 ~~~
 
-The server-side that responds to the incoming HTTP requests from the client-side JavaScript is handled in the `HttpServer` class. As shown above, the `Runner` class creates an instance of the `HttpServer` class.
+The server-side that responds to the incoming HTTP requests from the client-side JavaScript is handled in the `HttpServer` class. As shown above, the `Main` class creates an instance of the `HttpServer` class.
 
 ~~~java
 private HttpResponse handleHttpRequest(HttpRequest httpRequest) {
