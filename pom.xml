@@ -11,11 +11,11 @@
     <properties>
         <java.version>11</java.version>
         <scala.version>2.13</scala.version>
-        <akka.version>2.6.15</akka.version>
+        <akka.version>2.6.17</akka.version>
         <akka.http.version>10.2.6</akka.http.version>
         <akka.management.version>1.1.1</akka.management.version>
-        <logback.version>1.2.5</logback.version>
-        <jackson.version>2.12.4</jackson.version>
+        <logback.version>1.2.6</logback.version>
+        <jackson.version>2.13.0</jackson.version>
         <junit.version>5.5.2</junit.version>
     </properties>
 
